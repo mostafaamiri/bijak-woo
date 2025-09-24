@@ -8,7 +8,7 @@ if (! defined('ABSPATH')) exit;
 
 class Api
 {
-	private const API_BASE = 'https://testapi.bijak.ir';
+	private const API_BASE = 'https://divar.bijak.ir/';
 	private const TIMEOUT = 15;
 
 	public function request($endpoint, $method = 'GET', $body = null)

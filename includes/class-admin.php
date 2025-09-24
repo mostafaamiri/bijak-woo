@@ -233,6 +233,7 @@ class Admin
 		}
 
 		$api_key = trim($out['api_key'] ?? '');
+
 		if ($address_included && isset($out['origin_address']) && $out['origin_address'] === '' && $api_key !== '') {
 			$api = new Api();
 			$res = $api->request('/application/profile');
@@ -259,7 +260,7 @@ class Admin
 		return $out;
 	}
 
-	/* ---------- Page ---------- */
+	/* ---------- Page / Options sync ---------- */
 
 	private function refresh_profile_options(): array
 	{
@@ -338,13 +339,20 @@ class Admin
 			}
 		}
 
+		if ($new_key === '' && $old_key !== '') {
+			unset($new_arr['supplier_full_name'], $new_arr['supplier_phone']);
+			$new_arr['wallet_inventory'] = 0;
+		}
+
 		return $new_arr;
 	}
 
 	public function settings_page()
 	{
+		$api_key = trim(Plugin::opt('api_key', ''));
 		$profile = ['ok' => false, 'msg' => '', 'full_name' => '', 'phone' => '', 'wallet' => 0];
-		if (trim(Plugin::opt('api_key', '')) !== '') {
+
+		if ($api_key !== '') {
 			$profile = $this->refresh_profile_options();
 		}
 
@@ -369,7 +377,7 @@ class Admin
 		echo '<h2 class="bijak-heading">اتصال به بیجک (API Key)</h2>';
 		echo '<form method="post" action="options.php">';
 		settings_fields(Plugin::OPT);
-		$current_key = esc_attr(Plugin::opt('api_key', ''));
+		$current_key = esc_attr($api_key);
 		printf(
 			'<input type="text" class="regular-text" style="width:360px;direction:ltr" name="%s[api_key]" value="%s" placeholder="API Key"/>',
 			esc_attr(Plugin::OPT),
@@ -380,23 +388,33 @@ class Admin
 		echo '<p class="bijak-muted">پس از ذخیره، نام/تلفن/موجودی به‌روزرسانی می‌شود. اگر «آدرس مبدأ» خالی بوده باشد، دفعهٔ اول از پروفایل بیجک پر می‌شود.</p>';
 		echo '</div>';
 
-		$full_name = $profile['ok'] ? $profile['full_name'] : sanitize_text_field(Plugin::opt('supplier_full_name', ''));
-		$phone     = $profile['ok'] ? $profile['phone']     : sanitize_text_field(Plugin::opt('supplier_phone', ''));
-		$wallet    = $profile['ok'] ? (int)$profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
+		if ($api_key === '') {
+			$full_name = '';
+			$phone     = '';
+			$wallet    = 0;
+		} else {
+			$full_name = $profile['ok'] ? $profile['full_name'] : sanitize_text_field(Plugin::opt('supplier_full_name', ''));
+			$phone     = $profile['ok'] ? $profile['phone']     : sanitize_text_field(Plugin::opt('supplier_phone', ''));
+			$wallet    = $profile['ok'] ? (int)$profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
+		}
 
 		echo '<div class="bijak-card">';
 		echo '<h2 class="bijak-heading">اطلاعات حساب بیجک</h2>';
 		echo '<div class="bijak-row">';
 		echo '<div class="bijak-col"><label>نام مالک حساب</label><br/>';
-		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($full_name));
+		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($full_name ?: ''));
 		echo '<p class="bijak-muted">نام در پروفایل کاربر بیجک</p></div>';
 
 		echo '<div class="bijak-col"><label>شماره موبایل</label><br/>';
-		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($phone));
+		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($phone ?: ''));
 		echo '<p class="bijak-muted">تلفن پروفایل بیجک</p></div>';
 
 		echo '<div class="bijak-col"><label>موجودی کیف پول</label><br/>';
-		printf('<div class="bijak-badge bijak-inv">%s تومان</div>', number_format_i18n($wallet));
+		if ($api_key === '') {
+			echo '<div class="bijak-badge bijak-inv">—</div>';
+		} else {
+			printf('<div class="bijak-badge bijak-inv">%s تومان</div>', number_format_i18n($wallet));
+		}
 		echo '<p class="bijak-muted">کیف پول بیجک</p></div>';
 
 		echo '</div></div>';

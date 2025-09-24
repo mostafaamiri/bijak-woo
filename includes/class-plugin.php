@@ -14,6 +14,7 @@ require_once __DIR__ . '/class-order-sender.php';
 require_once __DIR__ . '/class-status.php';
 require_once __DIR__ . '/class-thankyou.php';
 require_once __DIR__ . '/class-refresh.php';
+require_once __DIR__ . '/class-dashboard.php';
 
 final class Plugin
 {
@@ -36,6 +37,8 @@ final class Plugin
 		(new Status_Display($api))->register();
 		(new Thankyou())->register();
 		(new Refresh_Shipping())->init();
+
+		(new Dashboard($api))->register();
 
 		add_action('woocommerce_shipping_init', function () {
 			require_once BIJAK_WOO_PATH . 'includes/class-shipping-method.php';
