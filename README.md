@@ -23,7 +23,7 @@
 
    ```bash
    git clone https://github.com/mostafaamiri/bijak_wordpress_plugin.git
-````
+```
 
 2. پوشه `bijak-woo` را در مسیر `wp-content/plugins` کپی کنید.
 3. از پیشخوان وردپرس، افزونه را فعال کنید.
