@@ -21,7 +21,7 @@
 
 1. مخزن را کلون کنید یا افزونه را دانلود کنید:
 
-   ```bash
+```bash
    git clone https://github.com/mostafaamiri/bijak_wordpress_plugin.git
 ```
 
