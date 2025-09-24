@@ -1,0 +1,168 @@
+.bijak-box {
+  border: 1px solid #e5e5e5;
+  background: #fafafa;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.bijak-box__title {
+  margin: 0 0 8px 0;
+  font-size: 1.05em;
+}
+
+.bijak-box .description {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 12px;
+}
+
+.bijak-box .form-row {
+  margin-bottom: 10px;
+}
+
+.bijak-door-row {
+  display: block;
+}
+
+.bijak-door-row label {
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.bijak-door-note {
+  display: block;
+  font-size: 12px;
+  color: #666;
+}
+
+.bijak-estimate {
+  clear: both;
+  margin-top: 10px;
+}
+
+#bijak_btn_estimate {
+  display: inline-block;
+}
+
+.bijak-estimate__result {
+  margin-top: 8px;
+  line-height: 1.7;
+}
+
+.bijak-card {
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px 0
+}
+
+.bijak-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.05em
+}
+
+.bijak-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 6px 0
+}
+
+.bijak-item {
+  flex: 1 1 220px;
+  min-width: 220px
+}
+
+.bijak-label {
+  color: #555;
+  font-size: .92em
+}
+
+.bijak-value {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600
+}
+
+.bijak-code {
+  display: inline-block;
+  background: #f6f7f7;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 3px 8px;
+  direction: ltr
+}
+
+.bijak-badge {
+  display: inline-block;
+  background: #f6f7f7;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: .92em
+}
+
+.bijak-actions {
+  margin-top: 12px
+}
+
+.bijak-btn {
+  display: inline-block;
+  background: #2271b1;
+  color: #fff !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-decoration: none
+}
+
+.bijak-btn:hover {
+  background: #135e96;
+  color: #fff !important
+}
+
+.bijak-note {
+  margin-top: 8px;
+  color: #666;
+  font-size: .9em
+}
+
+.bijak-card {
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0
+}
+
+.bijak-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap
+}
+
+.bijak-col {
+  flex: 1 1 260px;
+  min-width: 260px
+}
+
+.bijak-heading {
+  margin: 12px 0 8px;
+  font-size: 16px
+}
+
+.bijak-muted {
+  color: #666;
+  font-size: 12px
+}
+
+.bijak-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f5f5f5
+}
+
+.bijak-inv {
+  font-weight: 600
+}

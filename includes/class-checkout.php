@@ -1,0 +1,102 @@
+<?php
+
+namespace BIJAK\BijakWoo;
+
+if (! defined('ABSPATH')) {
+	exit;
+}
+
+class Checkout
+{
+	private static bool $printed = false;
+
+	public function register()
+	{
+		add_action('woocommerce_review_order_after_shipping', [$this, 'render_box'], 10);
+		add_action('woocommerce_checkout_process',          [$this, 'validate_required']);
+		add_action('woocommerce_checkout_update_order_meta', [$this, 'save_meta']);
+	}
+
+	private function is_bijak_chosen(): bool
+	{
+		$chosen = $_POST['shipping_method'][0] ?? '';
+		return is_string($chosen) && str_starts_with($chosen, 'bijak_pay_at_dest');
+	}
+
+	public function render_box(): void
+	{
+		if (self::$printed) return;
+		self::$printed = true;
+?>
+		<div class="bijak-box" style="display:none;">
+			<h2 class="bijak-box__title">ارسال کالا با بیجک</h2>
+
+			<p class="description">
+				کالای شما با بیجک ارسال می‌شود.<br>
+				<a href="https://bijak.ir" target="_blank" rel="noopener">
+					<button type="button" class="button button-primary">
+						سایت بیجک
+					</button>
+				</a>
+			</p>
+
+			<p class="form-row form-row-wide">
+				<label>شهر مقصد <abbr class="required">*</abbr></label>
+				<select id="bijak_dest_city"
+					name="bijak_dest_city"
+					class="input-select wc-enhanced-select address-field update_totals_on_change"
+					data-placeholder="— انتخاب —">
+					<option value=""></option>
+				</select>
+			</p>
+
+			<p class="form-row form-row-first">
+				<label>
+					<input type="hidden" name="bijak_is_door_delivery" value="0">
+					<input type="checkbox"
+						id="bijak_is_door_delivery"
+						name="bijak_is_door_delivery"
+						value="1"
+						class="input-checkbox update_totals_on_change"
+						checked>
+					تحویل درب منزل
+				</label>
+			</p>
+
+			<div class="bijak-estimate">
+				<div id="bijak_estimate_result" class="bijak-estimate__result"></div>
+			</div>
+		</div>
+<?php
+	}
+
+	public function validate_required(): void
+	{
+		if (! $this->is_bijak_chosen()) return;
+
+		$dest = sanitize_text_field($_POST['bijak_dest_city'] ?? '');
+		if ($dest === '') {
+			wc_add_notice('لطفاً «شهر مقصد» بیجک را انتخاب کنید.', 'error');
+		}
+
+		if (Plugin::opt('self_delivery', 'yes') !== 'yes') {
+			$origin_address = trim((string) Plugin::opt('origin_address', ''));
+			if ($origin_address === '') {
+				wc_add_notice('آدرس مبدأ (برای دریافت مرسوله توسط بیجک) در تنظیمات بیجک وارد نشده است.', 'error');
+			}
+		}
+	}
+
+	public function save_meta(int $order_id): void
+	{
+		if (! $this->is_bijak_chosen()) return;
+
+		foreach (['bijak_dest_city', 'bijak_is_door_delivery'] as $key) {
+			if (isset($_POST[$key])) {
+				update_post_meta($order_id, '_' . $key, sanitize_text_field($_POST[$key]));
+			}
+		}
+
+		wc_get_order($order_id)?->add_order_note('Bijak: ارسال توسط بیجک');
+	}
+}
