@@ -64,10 +64,10 @@ class Helpers
                 if (! $p) {
                     $is_goods_have_problem = true;
                 }
-                $pr_length = self::min1($p->get_length());
-                $pr_width = self::min1($p->get_width());
-                $pr_height = self::min1($p->get_height());
-                $pr_weight = self::min1($p->get_weight());
+                $pr_length = self::min0($p->get_length());
+                $pr_width = self::min0($p->get_width());
+                $pr_height = self::min0($p->get_height());
+                $pr_weight = self::min0($p->get_weight());
 
                 if ($pr_length == 0 or $pr_width == 0 or $pr_height == 0 or $pr_weight == 0) {
                     $is_goods_have_problem = true;
@@ -104,10 +104,10 @@ class Helpers
                 $is_goods_have_problem = true;
             }
 
-            $pr_length = self::min1($p->get_length());
-            $pr_width = self::min1($p->get_width());
-            $pr_height = self::min1($p->get_height());
-            $pr_weight = self::min1($p->get_weight());
+            $pr_length = self::min0($product->get_length());
+            $pr_width = self::min0($product->get_width());
+            $pr_height = self::min0($product->get_height());
+            $pr_weight = self::min0($product->get_weight());
 
             if ($pr_length == 0 or $pr_width == 0 or $pr_height == 0 or $pr_weight == 0) {
                 $is_goods_have_problem = true;
