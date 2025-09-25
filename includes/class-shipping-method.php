@@ -99,15 +99,37 @@ class Shipping_Method extends \WC_Shipping_Method
 
 		$origin_city_id = (int) Plugin::opt('origin_city_id', 0);
 
-		$dest_city_id   = (int) Helpers::checkout_field('bijak_dest_city', 0);
-		$is_door        = (string) Helpers::checkout_field('bijak_is_door_delivery', '1') === '1';
+		/**
+		 * WooCommerce sends checkout updates via AJAX without a dedicated nonce for shipping fields.
+		 * We read fields through Helpers::checkout_field() which unslashes & sanitizes.
+		 * Silence the sniff for this short, well-documented section.
+		 */
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
+		$dest_city_id = (int) Helpers::checkout_field('bijak_dest_city', 0);
+
+		$door_raw = Helpers::checkout_field('bijak_is_door_delivery', '__missing__');
+		if ($door_raw === '__missing__' && function_exists('WC') && WC()->session) {
+			$is_door = ((string) WC()->session->get('bijak_is_door_delivery', '1')) === '1';
+		} else {
+			$is_door = ((string) $door_raw) === '1';
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+
 
 		if (! $dest_city_id && function_exists('WC') && WC()->session) {
 			$dest_city_id = (int) WC()->session->get('bijak_dest_city_id', 0);
 		}
-		if (! isset($_POST['bijak_is_door_delivery']) && function_exists('WC') && WC()->session) {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
+		$door_raw = Helpers::checkout_field('bijak_is_door_delivery', '__missing__');
+		// phpcs:enable
+
+		if ($door_raw === '__missing__' && function_exists('WC') && WC()->session) {
 			$is_door = ((string) WC()->session->get('bijak_is_door_delivery', '1')) === '1';
+		} else {
+			$is_door = ((string) $door_raw) === '1';
 		}
+
 
 		if (! $origin_city_id || ! $dest_city_id) {
 			$this->add_rate([

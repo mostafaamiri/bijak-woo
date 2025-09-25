@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: بیجک (ترابری هوشمند)
+ * Plugin Name: Bijak
  * Plugin URI: https://github.com/mostafaamiri/bijak_wordpress_plugin
  * Description: ارسال کالا به صورت هوشمند به سرتاسر ایران به کمک باربری ها
  * Version: 1.0.0
@@ -9,13 +9,14 @@
  * Author: بیجک
  * Author URI: https://bijak.ir
  * Text Domain: bijak-woo
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * WC requires at least: 5.5
  * WC tested up to: 8.9
  */
-
 
 if (! defined('ABSPATH')) exit;
 
@@ -31,7 +32,8 @@ add_action('admin_init', function () {
 	if (get_option('bijak_woo_do_activation_redirect', false)) {
 		delete_option('bijak_woo_do_activation_redirect');
 
-		if (! isset($_GET['activate-multi'])) {
+		$is_multi = (bool) filter_input(INPUT_GET, 'activate-multi', FILTER_VALIDATE_BOOLEAN);
+		if (! $is_multi) {
 			wp_safe_redirect(admin_url('admin.php?page=bijak-woo'));
 			exit;
 		}

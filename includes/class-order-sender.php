@@ -120,9 +120,13 @@ class Order_Sender
 			return;
 		}
 
-		$log = fn($m) => (function_exists('wc_get_logger')
-			? wc_get_logger()->info($m, ['source' => 'bijak-woo'])
-			: error_log($m));
+		$logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
+		$log = function ($m) use ($logger) {
+			if ($logger) {
+				$logger->info($m, ['source' => 'bijak-woo']);
+			}
+		};
+
 
 		$supplier = $this->ensure_supplier_from_options_or_api();
 		$supplier_name  = $supplier['full_name'];

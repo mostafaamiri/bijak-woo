@@ -150,16 +150,24 @@ class Helpers
 
     public static function checkout_field(string $key, $default = '')
     {
+        // WooCommerce during checkout posts via AJAX without a dedicated nonce for our fields.
+        // We sanitize/unslash properly and document it for PHPCS.
+
+        // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (! empty($_POST['post_data'])) {
             $pd = [];
-            parse_str((string) $_POST['post_data'], $pd);
+            parse_str((string) wp_unslash($_POST['post_data']), $pd);
             if (isset($pd[$key])) {
-                return is_string($pd[$key]) ? trim($pd[$key]) : $pd[$key];
+                return is_string($pd[$key]) ? sanitize_text_field($pd[$key]) : $pd[$key];
             }
         }
+
         if (isset($_POST[$key])) {
-            return is_string($_POST[$key]) ? trim($_POST[$key]) : $_POST[$key];
+            $val = wp_unslash($_POST[$key]);
+            return is_string($val) ? sanitize_text_field($val) : $val;
         }
+        // phpcs:enable
+
         return $default;
     }
 }

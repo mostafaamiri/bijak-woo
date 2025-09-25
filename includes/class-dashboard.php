@@ -67,7 +67,11 @@ class Dashboard
         echo '<div class="item"><span class="label">شماره موبایل</span><span class="val" style="direction:ltr">'
             . esc_html($phone ?: '—') . '</span></div>';
         echo '<div class="item"><span class="label">موجودی کیف پول</span><span class="val"><span class="badge">';
-        echo $has_key ? (number_format_i18n($wallet) . ' تومان') : '—';
+        if ($has_key) {
+            echo esc_html(number_format_i18n($wallet) . ' تومان');
+        } else {
+            echo esc_html('—');
+        }
         echo '</span></span></div>';
         echo '</div>';
 

@@ -1,10 +1,10 @@
-=== بیجک (ترابری هوشمند) ===
+=== Bijak ===
 Contributors: bijak
 Plugin URI: https://github.com/mostafaamiri/bijak_wordpress_plugin
 Donate link: https://bijak.ir
 Tags: shipping, woocommerce, logistics, delivery, iran
 Requires at least: 5.8
-Tested up to: 6.6
+Tested up to: 6.8
 Requires PHP: 7.4
 WC requires at least: 5.5
 WC tested up to: 8.9

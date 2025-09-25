@@ -176,23 +176,25 @@ class Admin
 		}
 
 		if (empty($cities)) {
-			echo '<em style="color:#a00">خطا در واکشی شهرهای مبدأ از API.</em>';
+			echo '<em style="color:#a00">' . esc_html('خطا در واکشی شهرهای مبدأ از API.') . '</em>';
 			return;
 		}
 
 		printf('<select name="%s[origin_city_id]">', esc_attr(Plugin::OPT));
-		echo '<option value="">— انتخاب —</option>';
+		echo '<option value="">' . esc_html('— انتخاب —') . '</option>';
 		foreach ($cities as $c) {
-			$lbl = esc_html($c['name'] . ' (' . $c['prov'] . ')');
+			$val = (string) $c['id'];
+			$lbl = $c['name'] . ' (' . $c['prov'] . ')';
 			printf(
-				'<option value="%d" %s>%s</option>',
-				$c['id'],
-				selected($selected, $c['id'], false),
-				$lbl
+				'<option value="%s" %s>%s</option>',
+				esc_attr($val),
+				selected($selected, (int) $c['id'], false),
+				esc_html($lbl)
 			);
 		}
 		echo '</select>';
 	}
+
 
 	/* ---------- Sanitizer ---------- */
 
@@ -377,12 +379,13 @@ class Admin
 		echo '<h2 class="bijak-heading">اتصال به بیجک (API Key)</h2>';
 		echo '<form method="post" action="options.php">';
 		settings_fields(Plugin::OPT);
-		$current_key = esc_attr($api_key);
+
 		printf(
 			'<input type="text" class="regular-text" style="width:360px;direction:ltr" name="%s[api_key]" value="%s" placeholder="API Key"/>',
 			esc_attr(Plugin::OPT),
-			$current_key
+			esc_attr($api_key)
 		);
+
 		submit_button('ذخیره API Key', 'primary', 'submit', false);
 		echo '</form>';
 		echo '<p class="bijak-muted">پس از ذخیره، نام/تلفن/موجودی به‌روزرسانی می‌شود. اگر «آدرس مبدأ» خالی بوده باشد، دفعهٔ اول از پروفایل بیجک پر می‌شود.</p>';
@@ -415,8 +418,8 @@ class Admin
 		} else {
 			$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
 			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
-			printf('<div class="bijak-badge bijak-inv">%s تومان</div>', number_format_i18n($wallet));
-			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">افزایش موجودی</a>';
+			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' تومان') . '</div>';
+			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">افزایش کیف پول</a>';
 			echo '</div>';
 		}
 		echo '<p class="bijak-muted">کیف پول بیجک</p></div>';

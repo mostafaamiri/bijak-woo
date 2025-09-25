@@ -34,7 +34,7 @@ class Status_Display
 	public function render_admin_box($post)
 	{
 		$order_id = is_numeric($post) ? (int) $post : (int) $post->ID;
-		echo $this->get_status_html($order_id, 'admin');
+		echo wp_kses_post($this->get_status_html($order_id, 'admin'));
 	}
 
 	public function render_after_table($order)
@@ -43,7 +43,7 @@ class Status_Display
 			return;
 		}
 		$order_id = is_object($order) ? (int) $order->get_id() : (int) $order;
-		echo $this->get_status_html($order_id, 'front');
+		echo wp_kses_post($this->get_status_html($order_id, 'front'));
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -103,7 +103,7 @@ class Status_Display
 			$html .= '<tr><th scope="row" class="product-name">وضعیت</th><td class="product-total"><span>در انتظار ثبت در بیجک</span></td></tr>';
 			$html .= $table_close;
 
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
 			return $html . $section_close;
 		}
 
@@ -115,7 +115,7 @@ class Status_Display
 			$html .= '<tr><th scope="row" class="product-name">وضعیت</th><td class="product-total"><span>خطا در دریافت وضعیت</span></td></tr>';
 			$html .= '<tr><th scope="row" class="product-name">جزئیات</th><td class="product-total"><span>' . $msg . '</span></td></tr>';
 			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
 			return $html . $section_close;
 		}
 
@@ -123,7 +123,7 @@ class Status_Display
 			$html = $section_open . $table_open;
 			$html .= '<tr><th scope="row" class="product-name">وضعیت</th><td class="product-total"><span>پاسخ نامعتبر از بیجک</span></td></tr>';
 			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
 			return $html . $section_close;
 		}
 
@@ -172,7 +172,7 @@ class Status_Display
 
 		$html .= $table_close;
 
-		$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
+		$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">مشاهده سفارش در بیجک</a></p>';
 
 		return $html . $section_close;
 	}

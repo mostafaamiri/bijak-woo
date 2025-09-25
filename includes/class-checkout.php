@@ -19,9 +19,17 @@ class Checkout
 
 	private function is_bijak_chosen(): bool
 	{
-		$chosen = $_POST['shipping_method'][0] ?? '';
-		return is_string($chosen) && str_starts_with($chosen, 'bijak_pay_at_dest');
+		$chosen = '';
+		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if (isset($_POST['shipping_method'][0])) {
+			$chosen = sanitize_text_field(wp_unslash($_POST['shipping_method'][0]));
+		}
+		// phpcs:enable
+		return ($chosen !== '') && str_starts_with($chosen, 'bijak_pay_at_dest');
 	}
+
+
+
 
 	public function render_box(): void
 	{
@@ -74,7 +82,11 @@ class Checkout
 	{
 		if (! $this->is_bijak_chosen()) return;
 
-		$dest = sanitize_text_field($_POST['bijak_dest_city'] ?? '');
+		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$dest = isset($_POST['bijak_dest_city']) ? sanitize_text_field(wp_unslash($_POST['bijak_dest_city'])) : '';
+		// phpcs:enable
+
+
 		if ($dest === '') {
 			wc_add_notice('لطفاً «شهر مقصد» بیجک را انتخاب کنید.', 'error');
 		}
@@ -92,8 +104,14 @@ class Checkout
 		if (! $this->is_bijak_chosen()) return;
 
 		foreach (['bijak_dest_city', 'bijak_is_door_delivery'] as $key) {
+			// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if (isset($_POST[$key])) {
-				update_post_meta($order_id, '_' . $key, sanitize_text_field($_POST[$key]));
+				$raw = wp_unslash($_POST[$key]);
+				$val = is_array($raw)
+					? array_map('sanitize_text_field', $raw)
+					: sanitize_text_field($raw);
+				// phpcs:enable
+				update_post_meta($order_id, '_' . $key, $val);
 			}
 		}
 
