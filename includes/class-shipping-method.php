@@ -14,7 +14,7 @@ class Shipping_Method extends \WC_Shipping_Method
 		$this->instance_id        = absint($instance_id);
 		$this->method_title       = 'ارسال کالا با بیجک';
 		$this->method_description = 'امکان انتخاب پیش‌کرایه یا پس‌کرایه و (در حالت پیش‌کرایه) تعریف آستانهٔ ارسال رایگان.';
-		$this->supports           = ['shipping-zones', 'instance-settings'];
+		$this->supports           = ['shipping-zones', 'instance-settings', 'instance-settings-modal'];
 
 		$this->init();
 	}
