@@ -57,7 +57,7 @@ class Checkout
 						id="bijak_is_door_delivery"
 						name="bijak_is_door_delivery"
 						value="1"
-						class="input-checkbox update_totals_on_change"
+						class="input-checkbox"
 						checked>
 					تحویل درب منزل
 				</label>

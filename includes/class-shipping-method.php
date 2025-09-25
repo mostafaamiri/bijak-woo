@@ -98,8 +98,16 @@ class Shipping_Method extends \WC_Shipping_Method
 		}
 
 		$origin_city_id = (int) Plugin::opt('origin_city_id', 0);
+
 		$dest_city_id   = (int) Helpers::checkout_field('bijak_dest_city', 0);
 		$is_door        = (string) Helpers::checkout_field('bijak_is_door_delivery', '1') === '1';
+
+		if (! $dest_city_id && function_exists('WC') && WC()->session) {
+			$dest_city_id = (int) WC()->session->get('bijak_dest_city_id', 0);
+		}
+		if (! isset($_POST['bijak_is_door_delivery']) && function_exists('WC') && WC()->session) {
+			$is_door = ((string) WC()->session->get('bijak_is_door_delivery', '1')) === '1';
+		}
 
 		if (! $origin_city_id || ! $dest_city_id) {
 			$this->add_rate([
@@ -175,7 +183,6 @@ class Shipping_Method extends \WC_Shipping_Method
 				],
 				'destination_info' => [
 					'is_door_delivery' => $is_door,
-					// فعلا تا بعدا داخل خود بیجک عوض شود
 					'src' => [
 						'location_longitude' => 0,
 						'location_latitude'  => 0,

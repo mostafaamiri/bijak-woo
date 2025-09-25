@@ -57,6 +57,11 @@ class Ajax
 		$dest_city_id = intval($_POST['dest_city_id'] ?? 0);
 		$is_door      = ! empty($_POST['is_door_delivery']);
 
+		if (function_exists('WC') && WC()->session) {
+			WC()->session->set('bijak_dest_city_id', $dest_city_id);
+			WC()->session->set('bijak_is_door_delivery', $is_door ? '1' : '0');
+		}
+
 		// helper: تومان → ارز فروشگاه و ذخیره در سشن
 		$set_session_cost = function (float $toman) {
 			$store_cost = Helpers::toman_to_store_currency($toman);

@@ -1,26 +1,32 @@
 jQuery(function ($) {
+  /* ---------- state ---------- */
+  let CITY_CACHE = null, loadingCities = false;
+  let updatingCheckout = false;
+  let debounce;
+
   /* ---------- helpers ---------- */
   function dedupeBox() {
     const $b = $(".bijak-box");
     if ($b.length > 1) $b.slice(1).remove();
   }
-  function hasBijakRate() {
-    let ok = false;
-    $('input[name^="shipping_method"]').each(function () {
-      if ($(this).val()?.startsWith("bijak_pay_at_dest")) { ok = true; return false; }
-    });
-    return ok;
+
+  function isBijakChosen() {
+    let val = $('input[name^="shipping_method"]:checked').val();
+    if (typeof val === "undefined" || val === null) {
+      val = $('select[name^="shipping_method"]').val();
+    }
+    return typeof val === "string" && val.indexOf("bijak_pay_at_dest") === 0;
   }
+
   function reinit($s) {
     if ($.fn.selectWoo) {
       if ($s.hasClass("select2-hidden-accessible")) $s.selectWoo("destroy");
-      $s.selectWoo(); $(document.body).trigger("wc-enhanced-select-init", $s);
+      $s.selectWoo();
+      $(document.body).trigger("wc-enhanced-select-init", $s);
     }
   }
 
-  /* ---------- city list ---------- */
-  let CITY_CACHE = null, loadingCities = false;
-
+  /* ---------- cities ---------- */
   function fetchCities(oId) {
     return $.post(BIJAK.ajax_url, {
       action: "bijak_get_destinations",
@@ -28,7 +34,7 @@ jQuery(function ($) {
       origin_city_id: oId,
       _: Date.now()
     }).then(res => {
-      const arr = res?.success && Array.isArray(res.data?.data) ? res.data.data : [];
+      const arr = res && res.success && Array.isArray(res.data && res.data.data) ? res.data.data : [];
       return arr.map(c => ({ id: String(c.city_id), text: c.city_name }));
     });
   }
@@ -49,11 +55,14 @@ jQuery(function ($) {
     if (loadingCities) return;
     if (!force && $sel.children('option[value!=""]').length) return;
 
-    loadingCities = true; $sel.prop("disabled", true);
+    loadingCities = true;
+    $sel.prop("disabled", true);
 
     if (!force && CITY_CACHE && CITY_CACHE.oId === oId && CITY_CACHE.opts.length) {
       populateCities(CITY_CACHE.opts);
-      $sel.prop("disabled", false); loadingCities = false; return;
+      $sel.prop("disabled", false);
+      loadingCities = false;
+      return;
     }
 
     fetchCities(oId).then(opts => {
@@ -62,53 +71,73 @@ jQuery(function ($) {
     }).always(() => { loadingCities = false; $sel.prop("disabled", false); });
   }
 
-  function bijak_price_estimate() {
+  /* ---------- price estimate ---------- */
+  function bijak_price_estimate(triggerUpdate = true) {
     const $out = $("#bijak_estimate_result").text("در حال محاسبه...");
-    $.post(BIJAK.ajax_url, {
+    return $.post(BIJAK.ajax_url, {
       action: "bijak_price_estimate",
       nonce: BIJAK.nonce,
       dest_city_id: $("#bijak_dest_city").val(),
       is_door_delivery: $("#bijak_is_door_delivery").is(":checked") ? 1 : 0
     })
       .done(r => {
-        if (!r || !r.success) { $out.text(r?.data?.message || "خطا در تخمین"); return; }
+        if (!r || !r.success) { $out.text((r && r.data && r.data.message) || "خطا در تخمین"); return; }
         const d = r.data.data || {};
         let h = "<ul>";
         (d.items || []).forEach(it => h += `<li>${it.text} : ${(it.value || 0).toLocaleString("fa-IR")} تومان</li>`);
         h += `</ul><strong>جمع: ${(d.sum || 0).toLocaleString("fa-IR")} تومان</strong>`;
         $out.html(h);
-        $(document.body).trigger("update_checkout");
+
+        if (triggerUpdate) {
+          updatingCheckout = true;
+          $(document.body).trigger("update_checkout");
+          setTimeout(() => { updatingCheckout = false; }, 800);
+        }
       })
-      .fail(x => $out.text(x?.responseJSON?.data?.message || "خطا در تخمین"));
+      .fail(x => $out.text((x && x.responseJSON && x.responseJSON.data && x.responseJSON.data.message) || "خطا در تخمین"));
   }
 
   /* ---------- show/hide box ---------- */
   function showBox() {
     dedupeBox();
-    const ok = hasBijakRate();
-    $(".bijak-box").toggle(ok);
-    if (ok) ensureCities();
+    const ok = isBijakChosen();
+    const $box = $(".bijak-box");
+    $box.toggle(!!ok);
+
+    if (ok) {
+      ensureCities();
+    } else {
+      $("#bijak_estimate_result").empty();
+    }
   }
 
+  /* ---------- events ---------- */
   $(document).on("change",
     'input[name^="shipping_method"], select[name^="shipping_method"]',
     () => setTimeout(showBox, 50)
   );
-  $(document.body).on("updated_checkout updated_wc_div updated_shipping_method",
-    () => setTimeout(showBox, 150)
-  );
 
-  /* ---------- auto re-estimate on change ---------- */
-  let debounce;
-  $(document).on("change", "#bijak_dest_city, #bijak_is_door_delivery", function () {
-    clearTimeout(debounce);
-    debounce = setTimeout(() => {
-      bijak_price_estimate();
-    }, 400);
+  $(document.body).on("updated_checkout updated_wc_div updated_shipping_method", () => {
+    if (!updatingCheckout) {
+      setTimeout(showBox, 100);
+    }
   });
 
+  
   $(document).on("change", "#bijak_dest_city", function () {
     window.__bijak_saved_city = $(this).val() || "";
+    if (isBijakChosen() && $("#bijak_dest_city").val()) {
+      bijak_price_estimate(false);
+    }
+  });
+
+  $(document).on("change", "#bijak_is_door_delivery", function () {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      if (isBijakChosen() && $("#bijak_dest_city").val()) {
+        bijak_price_estimate(true);
+      }
+    }, 250);
   });
 
   /* ---------- init ---------- */
