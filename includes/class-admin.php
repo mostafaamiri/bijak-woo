@@ -357,13 +357,13 @@ class Admin
 		}
 
 		echo '<style>
-		.bijak-card{background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:16px;margin:16px 0}
-		.bijak-row{display:flex;gap:12px;flex-wrap:wrap}
-		.bijak-col{flex:1 1 260px;min-width:260px}
-		.bijak-heading{margin:12px 0 8px;font-size:16px}
-		.bijak-muted{color:#666;font-size:12px}
-		.bijak-badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#f5f5f5}
-		.bijak-inv{font-weight:600}
+			.bijak-card{background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:16px;margin:16px 0}
+			.bijak-row{display:flex;gap:12px;flex-wrap:wrap}
+			.bijak-col{flex:1 1 260px;min-width:260px}
+			.bijak-heading{margin:12px 0 8px;font-size:16px}
+			.bijak-muted{color:#666;font-size:12px}
+			.bijak-badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#f5f5f5}
+			.bijak-inv{font-weight:600}
 		</style>';
 
 		echo '<div class="wrap"><h1>بیجک (ترابری هوشمند)</h1>';
@@ -413,12 +413,15 @@ class Admin
 		if ($api_key === '') {
 			echo '<div class="bijak-badge bijak-inv">—</div>';
 		} else {
+			$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
+			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
 			printf('<div class="bijak-badge bijak-inv">%s تومان</div>', number_format_i18n($wallet));
+			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">افزایش موجودی</a>';
+			echo '</div>';
 		}
 		echo '<p class="bijak-muted">کیف پول بیجک</p></div>';
 
 		echo '</div></div>';
-
 
 		echo '<div class="bijak-card">';
 		echo '<form method="post" action="options.php">';
