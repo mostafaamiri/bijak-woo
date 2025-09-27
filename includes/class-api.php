@@ -18,7 +18,7 @@ class Api
 
 		$headers = ['Content-Type' => 'application/json; charset=utf-8'];
 		$key = trim(Plugin::opt('api_key', ''));
-		if ($key !== '') $headers['Authorization'] = 'Bearer ' . $key;
+		if ($key !== '') $headers['X-API-Key'] = $key;
 
 		$args = [
 			'method' => $method,
