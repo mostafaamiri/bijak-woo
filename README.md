@@ -24,7 +24,7 @@
 1. مخزن را کلون کنید یا افزونه را دانلود کنید:
 
 ```bash
-   git clone https://github.com/mostafaamiri/bijak_wordpress_plugin.git
+   git clone https://github.com/mostafaamiri/bijak-woo.git
 ```
 
 2. پوشه `bijak-woo` را در مسیر `wp-content/plugins` کپی کنید.
