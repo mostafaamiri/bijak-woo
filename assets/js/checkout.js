@@ -11,12 +11,33 @@ jQuery(function ($) {
   }
 
   function isBijakChosen() {
-    let val = $('input[name^="shipping_method"]:checked').val();
-    if (typeof val === "undefined" || val === null) {
-      val = $('select[name^="shipping_method"]').val();
+    let ok = false;
+    $('input[name^="shipping_method"]').each(function () {
+      const $el = $(this);
+      const type = (String($el.attr('type') || '')).toLowerCase();
+
+      if (type === 'radio' && !$el.is(':checked')) return;
+
+      const v = $el.val();
+      if (typeof v === 'string' && v.indexOf('bijak_pay_at_dest') === 0) {
+        ok = true;
+        return false;
+      }
+    });
+
+    if (!ok) {
+      $('select[name^="shipping_method"]').each(function () {
+        const v = $(this).val();
+        if (typeof v === 'string' && v.indexOf('bijak_pay_at_dest') === 0) {
+          ok = true;
+          return false;
+        }
+      });
     }
-    return typeof val === "string" && val.indexOf("bijak_pay_at_dest") === 0;
+
+    return ok;
   }
+
 
   function reinit($s) {
     if ($.fn.selectWoo) {
@@ -123,7 +144,10 @@ jQuery(function ($) {
     }
   });
 
-  
+  $(document.body).on('wc_fragments_loaded wc_fragments_refreshed', function () {
+    setTimeout(showBox, 50);
+  });
+
   $(document).on("change", "#bijak_dest_city", function () {
     window.__bijak_saved_city = $(this).val() || "";
     if (isBijakChosen() && $("#bijak_dest_city").val()) {
