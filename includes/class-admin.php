@@ -387,7 +387,7 @@ class Admin
 		);
 
 		submit_button('ذخیره API Key', 'primary', 'submit', false);
-		$api_url = 'https://my.bijak.ir/apiKeys';
+		$api_url = 'https://my.bijak.ir/panel/organizational/apiKeys';
 		echo '<span>&nbsp;&nbsp;</span>';
 		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">ایجاد API key</a>';
 		echo '</form>';
