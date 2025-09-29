@@ -76,7 +76,7 @@ class Dashboard
         echo '</div>';
 
         echo '<div class="actions">';
-        echo '<a class="btn" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">افزایش کیف پول</a>';
+        echo '<a class="btn" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">شارژ کیف پول</a>';
         echo '<a class="btn" href="' . esc_url($orders_url) . '" target="_blank" rel="noopener">مشاهده سفارش‌ها</a>';
         echo '</div>';
 

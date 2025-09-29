@@ -387,6 +387,9 @@ class Admin
 		);
 
 		submit_button('ذخیره API Key', 'primary', 'submit', false);
+		$api_url = 'https://my.bijak.ir/apiKeys';
+		echo '<span>&nbsp;&nbsp;</span>';
+		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">ایجاد API key</a>';
 		echo '</form>';
 		echo '<p class="bijak-muted">پس از ذخیره، نام/تلفن/موجودی به‌روزرسانی می‌شود. اگر «آدرس مبدأ» خالی بوده باشد، دفعهٔ اول از پروفایل بیجک پر می‌شود.</p>';
 		echo '</div>';
@@ -419,7 +422,7 @@ class Admin
 			$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
 			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
 			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' تومان') . '</div>';
-			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">افزایش کیف پول</a>';
+			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">شارژ کیف پول</a>';
 			echo '</div>';
 		}
 		echo '<p class="bijak-muted">کیف پول بیجک</p></div>';
