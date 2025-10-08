@@ -12,7 +12,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Bijak adds a smart freight shipping method to WooCommerce, enabling merchants in Iran to calculate shipping rates and automatically register orders through the Bijak logistics system.
+Add smart freight shipping to WooCommerce with live rate estimates and order integration via the Bijak API.
 
 == Description ==
 

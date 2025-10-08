@@ -14,10 +14,10 @@ class Api
 	/**
 	 * Make a request to the Bijak API.
 	 *
-	 * @param string $endpoint
-	 * @param string $method
-	 * @param mixed  $body
-	 * @return array|WP_Error
+	 * @param string $endpoint API endpoint (e.g. /application/profile)
+	 * @param string $method   HTTP method (GET, POST, etc.)
+	 * @param mixed  $body     Request body data
+	 * @return array|WP_Error  API response array or WP_Error object on failure
 	 */
 	public function request($endpoint, $method = 'GET', $body = null)
 	{
@@ -56,7 +56,7 @@ class Api
 			return is_array($json) ? $json : [];
 		}
 
-		// Build translated error message
+		// translators: %d is the HTTP response code returned by the Bijak API.
 		$msg = sprintf(__('HTTP error %d', 'bijak'), $code);
 
 		if (is_array($json) && ! empty($json['message'])) {

@@ -313,6 +313,7 @@ class Order_Sender {
 			$err = $res->get_error_message();
 			$api = $res->get_error_data();
 			$log( 'Bijak order failed #' . $order_id . ' | ' . $err . ' | api=' . ( is_string( $api ) ? $api : wp_json_encode( $api, JSON_UNESCAPED_UNICODE ) ) );
+			// translators: %s is the error message returned from the Bijak API.
 			$order->add_order_note( sprintf( __( 'Bijak: Order submission failed. %s', 'bijak' ), $err ) );
 			update_post_meta( $order_id, '_bijak_status', 'error' );
 			update_post_meta( $order_id, '_bijak_error_message', $err );
@@ -323,6 +324,7 @@ class Order_Sender {
 			update_post_meta( $order_id, '_bijak_order_uuid', sanitize_text_field( (string) $res['order_uuid'] ) );
 			update_post_meta( $order_id, '_bijak_status', 'success' );
 			update_post_meta( $order_id, '_bijak_error_message', '' );
+			// translators: %s is the UUID returned from Bijak after order submission.
 			$order->add_order_note( sprintf( __( 'Bijak: Order submitted. UUID: %s', 'bijak' ), (string) $res['order_uuid'] ) );
 		} else {
 			$order->add_order_note( 'Bijak: ' . __( 'Invalid response.', 'bijak' ) . ' ' . wp_json_encode( $res, JSON_UNESCAPED_UNICODE ) );
@@ -370,6 +372,7 @@ class Order_Sender {
 		] );
 
 		if ( is_wp_error( $res ) ) {
+			// translators: %s is the error message returned when trying to pay via wallet.
 			$order->add_order_note( sprintf( __( 'Bijak Wallet Pay: Error - %s', 'bijak' ), $res->get_error_message() ) );
 			return;
 		}
@@ -386,6 +389,7 @@ class Order_Sender {
 		if ( $success && $state === 'Paying' && ! empty( $res['data']['payment_link'] ) ) {
 			$link = (string) $res['data']['payment_link'];
 			update_post_meta( $order->get_id(), '_bijak_wallet_paid_state', 'Paying' );
+			// translators: %s is the payment link for completing wallet payment.
 			$order->add_order_note( sprintf( __( 'Bijak Wallet Pay: Insufficient balance. Payment link: %s', 'bijak' ), $link ) );
 			return;
 		}
