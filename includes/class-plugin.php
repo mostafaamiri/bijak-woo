@@ -29,11 +29,6 @@ final class Plugin {
 	public const OPT = 'bijak_woo_options';
 
 	public function boot(): void {
-		// Make translations available. This looks for:
-		//  - WP_LANG_DIR/plugins/bijak-*.mo
-		//  - wp-content/plugins/bijak/languages/bijak-*.mo
-		$rel_lang_dir = dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages';
-		load_plugin_textdomain( 'bijak', false, $rel_lang_dir );
 
 		( new Admin() )->register();
 		( new Assets() )->register();
@@ -45,8 +40,7 @@ final class Plugin {
 		( new Order_Sender( $api ) )->register();
 		( new Status_Display( $api ) )->register();
 		( new Thankyou() )->register();
-		( new Refresh_Shipping() )->init(); // class has a static init(), calling via instance is acceptable.
-
+		( new Refresh_Shipping() )->init();
 		( new Dashboard( $api ) )->register();
 
 		add_action(

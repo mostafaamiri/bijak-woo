@@ -25,13 +25,6 @@ define('BIJAK_WOO_VER', '1.0.0');
 define('BIJAK_WOO_PATH', plugin_dir_path(__FILE__));
 define('BIJAK_WOO_URL',  plugin_dir_url(__FILE__));
 
-/**
- * Load text domain for translations.
- */
-add_action('init', function () {
-	load_plugin_textdomain('bijak', false, dirname(plugin_basename(__FILE__)) . '/languages');
-});
-
 register_activation_hook(__FILE__, function () {
 	add_option('bijak_woo_do_activation_redirect', true);
 });

@@ -1,4 +1,4 @@
-=== Bijak – Smart Freight Shipping for WooCommerce ===
+=== Bijak ===
 Contributors: bijak
 Plugin URI: https://github.com/mostafaamiri/bijak_wordpress_plugin
 Donate link: https://bijak.ir
