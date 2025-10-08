@@ -2,7 +2,7 @@
 
 namespace BIJAK\BijakWoo;
 
-if (! defined('ABSPATH')) {
+if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
@@ -24,8 +24,8 @@ class Admin
 		$icon_url  = file_exists($icon_file) ? BIJAK_WOO_URL . 'assets/icon.png' : 'dashicons-admin-generic';
 
 		add_menu_page(
-			'بیجک (ترابری هوشمند)',
-			'بیجک (ارسال کالا)',
+			__('Bijak (Smart Freight)', 'bijak'),
+			__('Bijak (Shipping)', 'bijak'),
 			'manage_options',
 			'bijak-woo',
 			[$this, 'settings_page'],
@@ -35,8 +35,8 @@ class Admin
 
 		add_submenu_page(
 			'bijak-woo',
-			'بیجک (ترابری هوشمند)',
-			'بیجک (ترابری هوشمند)',
+			__('Bijak (Smart Freight)', 'bijak'),
+			__('Bijak (Smart Freight)', 'bijak'),
 			'manage_options',
 			'bijak-woo',
 			[$this, 'settings_page']
@@ -53,11 +53,11 @@ class Admin
 			['sanitize_callback' => [$this, 'sanitize_opts']]
 		);
 
-		add_settings_section('origin', 'تنظیمات مبدأ ارسال', '__return_false', Plugin::OPT);
+		add_settings_section('origin', __('Origin settings', 'bijak'), '__return_false', Plugin::OPT);
 
 		add_settings_field(
 			'origin_city_id',
-			'شهر مبدأ',
+			__('Origin city', 'bijak'),
 			[$this, 'render_origin_select'],
 			Plugin::OPT,
 			'origin'
@@ -65,25 +65,26 @@ class Admin
 
 		add_settings_field(
 			'self_delivery',
-			'خودم میارم باربری؟',
+			__('Will you deliver to terminal yourself?', 'bijak'),
 			function () {
 				$val = Plugin::opt('self_delivery', 'yes') === 'yes';
 				printf('<input type="hidden" name="%s[self_delivery]" value="no">', esc_attr(Plugin::OPT));
 				printf(
-					'<label><input type="checkbox" name="%s[self_delivery]" value="yes" %s> بله</label>',
+					'<label><input type="checkbox" name="%s[self_delivery]" value="yes" %s> %s</label>',
 					esc_attr(Plugin::OPT),
-					checked($val, true, false)
+					checked($val, true, false),
+					esc_html__('Yes', 'bijak')
 				);
 			},
 			Plugin::OPT,
 			'origin'
 		);
 
-		$this->add_text_field('origin_address', 'آدرس دقیق مبدأ', '', 'textarea');
+		$this->add_text_field('origin_address', __('Origin address (detailed)', 'bijak'), '', 'textarea');
 
 		add_settings_field(
 			'origin_coords',
-			'مختصات مبدأ (lat,lon)',
+			__('Origin coordinates (lat,lon)', 'bijak'),
 			function () {
 				$val = trim((string) Plugin::opt('origin_coords', ''));
 				printf(
@@ -91,21 +92,20 @@ class Admin
 					esc_attr(Plugin::OPT),
 					esc_attr($val)
 				);
-				echo '<p class="description">فرمت: <code>latitude,longitude</code> (مثال: <code>35.6971,51.4041</code>)</p>';
+				echo '<p class="description">' . esc_html__('Format: latitude,longitude (e.g. 35.6971,51.4041)', 'bijak') . '</p>';
 			},
 			Plugin::OPT,
 			'origin'
 		);
 
-
 		add_settings_field(
 			'delivery_day',
-			'روز تحویل به بیجک',
+			__('Pickup day for Bijak', 'bijak'),
 			function () {
 				$val = Plugin::opt('delivery_day', 'first_working');
 				$options = [
-					'first_working'  => 'اولین روز کاری',
-					'second_working' => 'دومین روز کاری',
+					'first_working'  => __('First working day', 'bijak'),
+					'second_working' => __('Second working day', 'bijak'),
 				];
 				printf('<select name="%s[delivery_day]">', esc_attr(Plugin::OPT));
 				foreach ($options as $k => $lbl) {
@@ -165,7 +165,7 @@ class Admin
 		$resp  = $api->request('/application/terminals/?type=origin');
 		$cities = [];
 
-		if (! is_wp_error($resp) && ! empty($resp['data']) && is_array($resp['data'])) {
+		if ( ! is_wp_error($resp) && ! empty($resp['data']) && is_array($resp['data']) ) {
 			foreach ($resp['data'] as $c) {
 				$cities[] = [
 					'id'   => intval($c['city_id']),
@@ -175,13 +175,13 @@ class Admin
 			}
 		}
 
-		if (empty($cities)) {
-			echo '<em style="color:#a00">' . esc_html('خطا در واکشی شهرهای مبدأ از API.') . '</em>';
+		if ( empty($cities) ) {
+			echo '<em style="color:#a00">' . esc_html__('Failed to fetch origin cities from API.', 'bijak') . '</em>';
 			return;
 		}
 
 		printf('<select name="%s[origin_city_id]">', esc_attr(Plugin::OPT));
-		echo '<option value="">' . esc_html('— انتخاب —') . '</option>';
+		echo '<option value="">' . esc_html__('— Select —', 'bijak') . '</option>';
 		foreach ($cities as $c) {
 			$val = (string) $c['id'];
 			$lbl = $c['name'] . ' (' . $c['prov'] . ')';
@@ -195,39 +195,40 @@ class Admin
 		echo '</select>';
 	}
 
-
 	/* ---------- Sanitizer ---------- */
 
 	public function sanitize_opts($in)
 	{
 		$old = get_option(Plugin::OPT, []);
-		if (! is_array($old)) $old = [];
+		if ( ! is_array($old) ) {
+			$old = [];
+		}
 
 		$in  = is_array($in) ? $in : [];
 		$out = $old;
 
-		if (array_key_exists('api_key', $in)) {
+		if ( array_key_exists('api_key', $in) ) {
 			$out['api_key'] = sanitize_text_field($in['api_key'] ?? '');
 		}
 
-		if (array_key_exists('origin_city_id', $in)) {
+		if ( array_key_exists('origin_city_id', $in) ) {
 			$out['origin_city_id'] = intval($in['origin_city_id'] ?? 0);
 		}
 
 		$address_included = array_key_exists('origin_address', $in);
-		if ($address_included) {
+		if ( $address_included ) {
 			$out['origin_address'] = sanitize_textarea_field($in['origin_address'] ?? '');
 		}
 
-		if (array_key_exists('origin_coords', $in)) {
+		if ( array_key_exists('origin_coords', $in) ) {
 			$out['origin_coords'] = sanitize_text_field($in['origin_coords'] ?? '');
 		}
 
-		if (array_key_exists('self_delivery', $in)) {
-			$out['self_delivery'] = (! empty($in['self_delivery']) && $in['self_delivery'] === 'yes') ? 'yes' : 'no';
+		if ( array_key_exists('self_delivery', $in) ) {
+			$out['self_delivery'] = ( ! empty($in['self_delivery']) && $in['self_delivery'] === 'yes' ) ? 'yes' : 'no';
 		}
 
-		if (array_key_exists('delivery_day', $in)) {
+		if ( array_key_exists('delivery_day', $in) ) {
 			$val = $in['delivery_day'] ?? '';
 			$out['delivery_day'] = in_array($val, ['first_working', 'second_working'], true)
 				? $val
@@ -236,24 +237,24 @@ class Admin
 
 		$api_key = trim($out['api_key'] ?? '');
 
-		if ($address_included && isset($out['origin_address']) && $out['origin_address'] === '' && $api_key !== '') {
+		if ( $address_included && isset($out['origin_address']) && $out['origin_address'] === '' && $api_key !== '' ) {
 			$api = new Api();
 			$res = $api->request('/application/profile');
-			if (! is_wp_error($res) && ! empty($res['data'])) {
+			if ( ! is_wp_error($res) && ! empty($res['data']) ) {
 				$d = $res['data'];
 
-				if (! empty($d['address'])) {
+				if ( ! empty($d['address']) ) {
 					$out['origin_address'] = sanitize_textarea_field((string) $d['address']);
 				}
 
-				if (isset($d['lat']) && isset($d['lng'])) {
+				if ( isset($d['lat']) && isset($d['lng']) ) {
 					$lat = (float) $d['lat'];
 					$lng = (float) $d['lng'];
 					$out['origin_coords'] = sanitize_text_field($lat . ',' . $lng);
 				}
 
 				$cid = isset($d['city_id']) ? intval($d['city_id']) : 0;
-				if ($cid > 0) {
+				if ( $cid > 0 ) {
 					$out['origin_city_id'] = $cid;
 				}
 			}
@@ -267,16 +268,16 @@ class Admin
 	private function refresh_profile_options(): array
 	{
 		$key = trim(Plugin::opt('api_key', ''));
-		if ($key === '') {
-			return ['ok' => false, 'msg' => 'API Key تنظیم نشده است.', 'full_name' => '', 'phone' => '', 'wallet' => 0];
+		if ( $key === '' ) {
+			return ['ok' => false, 'msg' => __('API Key is not set.', 'bijak'), 'full_name' => '', 'phone' => '', 'wallet' => 0];
 		}
 
 		$api = new Api();
 		$res = $api->request('/application/profile');
 
-		if (is_wp_error($res) || empty($res['data'])) {
-			$msg = is_wp_error($res) ? $res->get_error_message() : 'پاسخ نامعتبر از API';
-			return ['ok' => false, 'msg' => 'خطا در دریافت پروفایل: ' . $msg, 'full_name' => '', 'phone' => '', 'wallet' => 0];
+		if ( is_wp_error($res) || empty($res['data']) ) {
+			$msg = is_wp_error($res) ? $res->get_error_message() : 'Invalid API response';
+			return ['ok' => false, 'msg' => __('Failed to fetch profile: ', 'bijak') . $msg, 'full_name' => '', 'phone' => '', 'wallet' => 0];
 		}
 
 		$d = $res['data'];
@@ -285,18 +286,20 @@ class Admin
 		$wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
 
 		$opts = get_option(Plugin::OPT, []);
-		if (! is_array($opts)) $opts = [];
+		if ( ! is_array($opts) ) {
+			$opts = [];
+		}
 		$opts['supplier_full_name'] = sanitize_text_field($full_name);
 		$opts['supplier_phone']     = sanitize_text_field($phone);
 		$opts['wallet_inventory']   = max(0, $wallet);
 		update_option(Plugin::OPT, $opts);
 
-		return ['ok' => true, 'msg' => 'اطلاعات پروفایل از بیجک به‌روزرسانی شد.', 'full_name' => $full_name, 'phone' => $phone, 'wallet' => $wallet];
+		return ['ok' => true, 'msg' => __('Profile info synced from Bijak.', 'bijak'), 'full_name' => $full_name, 'phone' => $phone, 'wallet' => $wallet];
 	}
 
 	public function pre_update_options($new, $old, $option)
 	{
-		if ($option !== Plugin::OPT) {
+		if ( $option !== Plugin::OPT ) {
 			return $new;
 		}
 		$new_arr = is_array($new) ? $new : [];
@@ -305,43 +308,47 @@ class Admin
 		$new_key = isset($new_arr['api_key']) ? trim((string) $new_arr['api_key']) : '';
 		$old_key = isset($old_arr['api_key']) ? trim((string) $old_arr['api_key']) : '';
 
-		if ($new_key !== '' && $new_key !== $old_key) {
+		if ( $new_key !== '' && $new_key !== $old_key ) {
 			$api = new Api();
 			$res = $api->request('/application/profile');
 
-			if (! is_wp_error($res) && ! empty($res['data'])) {
+			if ( ! is_wp_error($res) && ! empty($res['data']) ) {
 				$d = $res['data'];
 
 				$full_name = trim(($d['first_name'] ?? '') . ' ' . ($d['last_name'] ?? ''));
 				$phone     = Helpers::normalize_phone($d['username'] ?? '');
 				$wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
 
-				if ($full_name !== '') $new_arr['supplier_full_name'] = sanitize_text_field($full_name);
-				if ($phone     !== '') $new_arr['supplier_phone']     = sanitize_text_field($phone);
+				if ( $full_name !== '' ) {
+					$new_arr['supplier_full_name'] = sanitize_text_field($full_name);
+				}
+				if ( $phone !== '' ) {
+					$new_arr['supplier_phone'] = sanitize_text_field($phone);
+				}
 				$new_arr['wallet_inventory'] = max(0, $wallet);
 
 				$address_is_empty_now =
 					empty($new_arr['origin_address']) &&
 					empty($old_arr['origin_address']);
 
-				if ($address_is_empty_now) {
-					if (! empty($d['address'])) {
+				if ( $address_is_empty_now ) {
+					if ( ! empty($d['address']) ) {
 						$new_arr['origin_address'] = sanitize_textarea_field((string) $d['address']);
 					}
 
-					if (isset($d['lat']) && isset($d['lng'])) {
-						$new_arr['origin_coords'] = sanitize_text_field(((float)$d['lat']) . ',' . ((float)$d['lng']));
+					if ( isset($d['lat']) && isset($d['lng']) ) {
+						$new_arr['origin_coords'] = sanitize_text_field(((float) $d['lat']) . ',' . ((float) $d['lng']));
 					}
 
 					$cid = isset($d['city_id']) ? intval($d['city_id']) : 0;
-					if ($cid > 0) {
+					if ( $cid > 0 ) {
 						$new_arr['origin_city_id'] = $cid;
 					}
 				}
 			}
 		}
 
-		if ($new_key === '' && $old_key !== '') {
+		if ( $new_key === '' && $old_key !== '' ) {
 			unset($new_arr['supplier_full_name'], $new_arr['supplier_phone']);
 			$new_arr['wallet_inventory'] = 0;
 		}
@@ -351,32 +358,27 @@ class Admin
 
 	public function settings_page()
 	{
+		// Extra safety: ensure only admins can view this page directly.
+		if ( ! current_user_can('manage_options') ) {
+			return;
+		}
+
 		$api_key = trim(Plugin::opt('api_key', ''));
 		$profile = ['ok' => false, 'msg' => '', 'full_name' => '', 'phone' => '', 'wallet' => 0];
 
-		if ($api_key !== '') {
+		if ( $api_key !== '' ) {
 			$profile = $this->refresh_profile_options();
 		}
 
-		echo '<style>
-			.bijak-card{background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:16px;margin:16px 0}
-			.bijak-row{display:flex;gap:12px;flex-wrap:wrap}
-			.bijak-col{flex:1 1 260px;min-width:260px}
-			.bijak-heading{margin:12px 0 8px;font-size:16px}
-			.bijak-muted{color:#666;font-size:12px}
-			.bijak-badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#f5f5f5}
-			.bijak-inv{font-weight:600}
-		</style>';
+		echo '<div class="wrap"><h1>' . esc_html__('Bijak (Smart Freight)', 'bijak') . '</h1>';
 
-		echo '<div class="wrap"><h1>بیجک (ترابری هوشمند)</h1>';
-
-		if ($profile['msg'] !== '') {
+		if ( $profile['msg'] !== '' ) {
 			$cls = $profile['ok'] ? 'notice-info' : 'notice-error';
 			echo '<div class="notice ' . esc_attr($cls) . ' is-dismissible"><p>' . esc_html($profile['msg']) . '</p></div>';
 		}
 
 		echo '<div class="bijak-card">';
-		echo '<h2 class="bijak-heading">اتصال به بیجک (API Key)</h2>';
+		echo '<h2 class="bijak-heading">' . esc_html__('Connect to Bijak (API Key)', 'bijak') . '</h2>';
 		echo '<form method="post" action="options.php">';
 		settings_fields(Plugin::OPT);
 
@@ -386,46 +388,46 @@ class Admin
 			esc_attr($api_key)
 		);
 
-		submit_button('ذخیره API Key', 'primary', 'submit', false);
+		submit_button(esc_html__('Save API Key', 'bijak'), 'primary', 'submit', false);
 		$api_url = 'https://my.bijak.ir/panel/organizational/apiKeys';
 		echo '<span>&nbsp;&nbsp;</span>';
-		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">ایجاد API key</a>';
+		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">' . esc_html__('Create API key', 'bijak') . '</a>';
 		echo '</form>';
-		echo '<p class="bijak-muted">پس از ذخیره، نام/تلفن/موجودی به‌روزرسانی می‌شود. اگر «آدرس مبدأ» خالی بوده باشد، دفعهٔ اول از پروفایل بیجک پر می‌شود.</p>';
+		echo '<p class="bijak-muted">' . esc_html__('After saving, name/phone/wallet will be synced. If "Origin address" is empty, it will be filled from your Bijak profile on first sync.', 'bijak') . '</p>';
 		echo '</div>';
 
-		if ($api_key === '') {
+		if ( $api_key === '' ) {
 			$full_name = '';
 			$phone     = '';
 			$wallet    = 0;
 		} else {
 			$full_name = $profile['ok'] ? $profile['full_name'] : sanitize_text_field(Plugin::opt('supplier_full_name', ''));
 			$phone     = $profile['ok'] ? $profile['phone']     : sanitize_text_field(Plugin::opt('supplier_phone', ''));
-			$wallet    = $profile['ok'] ? (int)$profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
+			$wallet    = $profile['ok'] ? (int) $profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
 		}
 
 		echo '<div class="bijak-card">';
-		echo '<h2 class="bijak-heading">اطلاعات حساب بیجک</h2>';
+		echo '<h2 class="bijak-heading">' . esc_html__('Bijak account info', 'bijak') . '</h2>';
 		echo '<div class="bijak-row">';
-		echo '<div class="bijak-col"><label>نام مالک حساب</label><br/>';
+		echo '<div class="bijak-col"><label>' . esc_html__('Account holder name', 'bijak') . '</label><br/>';
 		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($full_name ?: ''));
-		echo '<p class="bijak-muted">نام در پروفایل کاربر بیجک</p></div>';
+		echo '<p class="bijak-muted">' . esc_html__('Name in your Bijak profile', 'bijak') . '</p></div>';
 
-		echo '<div class="bijak-col"><label>شماره موبایل</label><br/>';
+		echo '<div class="bijak-col"><label>' . esc_html__('Phone number', 'bijak') . '</label><br/>';
 		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($phone ?: ''));
-		echo '<p class="bijak-muted">تلفن پروفایل بیجک</p></div>';
+		echo '<p class="bijak-muted">' . esc_html__('Phone in Bijak profile', 'bijak') . '</p></div>';
 
-		echo '<div class="bijak-col"><label>موجودی کیف پول</label><br/>';
-		if ($api_key === '') {
+		echo '<div class="bijak-col"><label>' . esc_html__('Wallet balance', 'bijak') . '</label><br/>';
+		if ( $api_key === '' ) {
 			echo '<div class="bijak-badge bijak-inv">—</div>';
 		} else {
 			$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
 			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
-			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' تومان') . '</div>';
-			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">شارژ کیف پول</a>';
+			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' ' . __('Toman', 'bijak')) . '</div>';
+			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up wallet', 'bijak') . '</a>';
 			echo '</div>';
 		}
-		echo '<p class="bijak-muted">کیف پول بیجک</p></div>';
+		echo '<p class="bijak-muted">' . esc_html__('Bijak wallet', 'bijak') . '</p></div>';
 
 		echo '</div></div>';
 
@@ -443,16 +445,21 @@ class Admin
 
 	public function maybe_notice_api_key()
 	{
-		if (! current_user_can('manage_options')) {
+		if ( ! current_user_can('manage_options') ) {
 			return;
 		}
 		$key = trim(Plugin::opt('api_key', ''));
-		if ($key !== '') {
+		if ( $key !== '' ) {
 			return;
 		}
 		$url = admin_url('admin.php?page=bijak-woo');
 		echo '<div class="notice notice-warning is-dismissible">';
-		echo '<p><strong>بیجک:</strong> لطفاً <a href="' . esc_url($url) . '">API Key</a> خود را وارد کنید.</p>';
-		echo '</div>';
+		echo '<p><strong>' . esc_html__('Bijak:', 'bijak') . '</strong> ';
+		echo wp_kses_post(sprintf(
+			/* translators: %s: settings url */
+			__('Please enter your <a href="%s">API Key</a>.', 'bijak'),
+			esc_url($url)
+		));
+		echo '</p></div>';
 	}
 }

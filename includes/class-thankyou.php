@@ -6,14 +6,15 @@ if (! defined('ABSPATH')) exit;
 
 class Thankyou
 {
-	public function register()
+	public function register(): void
 	{
 		add_action('woocommerce_thankyou', [$this, 'render'], 20);
 	}
 
-	public function render($order_id)
+	public function render($order_id): void
 	{
 		if (! $order_id) return;
+
 		$order = wc_get_order($order_id);
 		if (! $order) return;
 
@@ -23,16 +24,19 @@ class Thankyou
 		if ($status === '') return;
 
 		echo '<div class="woocommerce-message" style="margin-top:16px;">';
+
 		if ($status === 'success') {
-			echo '<strong>ثبت سفارش در بیجک موفق بود. | بیجک ترابری هوشمند</strong>';
+			echo '<strong>' . esc_html__('Your order was successfully registered in Bijak.', 'bijak') . '</strong>';
 		} else {
-			echo '<strong>ثبت سفارش در بیجک ناموفق بود.</strong><br/>';
+			echo '<strong>' . esc_html__('Failed to register order in Bijak.', 'bijak') . '</strong><br/>';
+
 			if ($error) {
-				echo 'پیام: ' . esc_html($error);
+				echo esc_html__('Error:', 'bijak') . ' ' . esc_html($error);
 			} else {
-				echo 'لطفاً با پشتیبانی تماس بگیرید.';
+				echo esc_html__('Please contact support.', 'bijak');
 			}
 		}
+
 		echo '</div>';
 	}
 }

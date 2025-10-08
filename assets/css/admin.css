@@ -1,0 +1,112 @@
+/* Dashboard widget */
+.bijak-dash {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bijak-dash .row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bijak-dash .item {
+    flex: 1 1 220px;
+    min-width: 220px;
+}
+
+.bijak-dash .label {
+    color: #555;
+    font-size: .92em;
+}
+
+.bijak-dash .val {
+    display: block;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
+.bijak-dash .badge {
+    display: inline-block;
+    background: #f6f7f7;
+    border: 1px solid #e5e5e5;
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+.bijak-dash .actions {
+    margin-top: 6px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bijak-dash .btn {
+    display: inline-block;
+    background: #2271b1;
+    color: #fff !important;
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-decoration: none;
+}
+
+.bijak-dash .btn:hover {
+    background: #135e96;
+    color: #fff !important;
+}
+
+.bijak-dash small.muted {
+    color: #666;
+}
+
+/* Settings cards (shared with Admin settings page) */
+.bijak-card {
+    background: #fff;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.bijak-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bijak-col {
+    flex: 1 1 260px;
+    min-width: 260px;
+}
+
+.bijak-heading {
+    margin: 12px 0 8px;
+    font-size: 16px;
+}
+
+.bijak-muted {
+    color: #666;
+    font-size: 12px;
+}
+
+.bijak-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #f5f5f5;
+}
+
+.bijak-inv {
+    font-weight: 600;
+}
+
+/* Small code badge used across admin views */
+.bijak-code {
+    display: inline-block;
+    background: #f6f7f7;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 3px 8px;
+    direction: ltr;
+}

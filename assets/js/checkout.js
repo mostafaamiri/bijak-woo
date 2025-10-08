@@ -1,4 +1,6 @@
 jQuery(function ($) {
+  const { __ } = wp.i18n;
+
   /* ---------- state ---------- */
   let CITY_CACHE = null, loadingCities = false;
   let updatingCheckout = false;
@@ -12,6 +14,7 @@ jQuery(function ($) {
 
   function isBijakChosen() {
     let ok = false;
+
     $('input[name^="shipping_method"]').each(function () {
       const $el = $(this);
       const type = (String($el.attr('type') || '')).toLowerCase();
@@ -37,7 +40,6 @@ jQuery(function ($) {
 
     return ok;
   }
-
 
   function reinit($s) {
     if ($.fn.selectWoo) {
@@ -94,7 +96,7 @@ jQuery(function ($) {
 
   /* ---------- price estimate ---------- */
   function bijak_price_estimate(triggerUpdate = true) {
-    const $out = $("#bijak_estimate_result").text("در حال محاسبه...");
+    const $out = $("#bijak_estimate_result").text( __("Calculating...", "bijak") );
     return $.post(BIJAK.ajax_url, {
       action: "bijak_price_estimate",
       nonce: BIJAK.nonce,
@@ -102,11 +104,16 @@ jQuery(function ($) {
       is_door_delivery: $("#bijak_is_door_delivery").is(":checked") ? 1 : 0
     })
       .done(r => {
-        if (!r || !r.success) { $out.text((r && r.data && r.data.message) || "خطا در تخمین"); return; }
+        if (!r || !r.success) {
+          $out.text((r && r.data && r.data.message) || __("Failed to estimate price", "bijak"));
+          return;
+        }
         const d = r.data.data || {};
         let h = "<ul>";
-        (d.items || []).forEach(it => h += `<li>${it.text} : ${(it.value || 0).toLocaleString("fa-IR")} تومان</li>`);
-        h += `</ul><strong>جمع: ${(d.sum || 0).toLocaleString("fa-IR")} تومان</strong>`;
+        (d.items || []).forEach(it => {
+          h += `<li>${it.text} : ${(it.value || 0).toLocaleString("fa-IR")} ${__("Toman", "bijak")}</li>`;
+        });
+        h += `</ul><strong>${__("Total", "bijak")}: ${(d.sum || 0).toLocaleString("fa-IR")} ${__("Toman", "bijak")}</strong>`;
         $out.html(h);
 
         if (triggerUpdate) {
@@ -115,7 +122,9 @@ jQuery(function ($) {
           setTimeout(() => { updatingCheckout = false; }, 800);
         }
       })
-      .fail(x => $out.text((x && x.responseJSON && x.responseJSON.data && x.responseJSON.data.message) || "خطا در تخمین"));
+      .fail(x => {
+        $out.text((x && x.responseJSON && x.responseJSON.data && x.responseJSON.data.message) || __("Failed to estimate price", "bijak"));
+      });
   }
 
   /* ---------- show/hide box ---------- */

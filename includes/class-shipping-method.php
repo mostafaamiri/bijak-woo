@@ -12,8 +12,8 @@ class Shipping_Method extends \WC_Shipping_Method
 	{
 		$this->id                 = 'bijak_pay_at_dest';
 		$this->instance_id        = absint($instance_id);
-		$this->method_title       = 'ارسال کالا با بیجک';
-		$this->method_description = 'امکان انتخاب پیش‌کرایه یا پس‌کرایه و (در حالت پیش‌کرایه) تعریف آستانهٔ ارسال رایگان.';
+		$this->method_title       = __('Bijak Shipping', 'bijak');
+		$this->method_description = __('Enable prepay/postpay shipping via Bijak with optional free shipping threshold.', 'bijak');
 		$this->supports           = ['shipping-zones', 'instance-settings', 'instance-settings-modal'];
 
 		$this->init();
@@ -24,7 +24,7 @@ class Shipping_Method extends \WC_Shipping_Method
 		$this->init_form_fields();
 		$this->init_settings();
 
-		$this->title   = $this->get_option('title', 'ارسال کالا با بیجک');
+		$this->title   = $this->get_option('title', __('Bijak Shipping', 'bijak'));
 		$this->enabled = $this->get_option('enabled', 'yes');
 
 		add_action('woocommerce_update_options_shipping_' . $this->id, [$this, 'process_admin_options']);
@@ -34,34 +34,34 @@ class Shipping_Method extends \WC_Shipping_Method
 	{
 		$this->instance_form_fields = [
 			'enabled' => [
-				'title'       => 'فعال/غیرفعال',
+				'title'       => __('Enable/Disable', 'bijak'),
 				'type'        => 'checkbox',
-				'label'       => 'فعال باشد',
+				'label'       => __('Enable this shipping method', 'bijak'),
 				'default'     => 'yes',
 			],
 			'title' => [
-				'title'       => 'عنوان نمایشی روش حمل',
+				'title'       => __('Method Title', 'bijak'),
 				'type'        => 'text',
-				'default'     => 'ارسال کالا با بیجک',
+				'default'     => __('Bijak Shipping', 'bijak'),
 				'desc_tip'    => true,
-				'description' => 'این عنوان به مشتری نمایش داده می‌شود.',
+				'description' => __('This controls the title shown to the customer during checkout.', 'bijak'),
 			],
 			'mode' => [
-				'title'       => 'نوع پرداخت کرایه',
+				'title'       => __('Shipping Payment Mode', 'bijak'),
 				'type'        => 'select',
 				'default'     => 'postpay',
 				'options'     => [
-					'postpay' => 'پس‌کرایه (پرداخت توسط گیرنده در زمان تحویل)',
-					'prepay'  => 'پیش‌کرایه',
+					'postpay' => __('Postpay (Customer pays at delivery)', 'bijak'),
+					'prepay'  => __('Prepay (Pay in checkout)', 'bijak'),
 				],
-				'description' => 'در حالت پیش‌کرایه، هزینهٔ حمل روی فاکتور فروشگاه می‌آید و در صورت عبور از آستانه، برای کاربر رایگان می‌شود ولی از کیف‌پول بیجک شما کسر خواهد شد.',
+				'description' => __('In prepay mode, shipping cost is added to cart. If threshold is reached, it becomes free. Paid from your Bijak wallet.', 'bijak'),
 			],
 			'free_threshold' => [
-				'title'       => 'آستانهٔ ارسال رایگان (فقط در حالت پیش‌کرایه)',
+				'title'       => __('Free Shipping Threshold (Prepay Only)', 'bijak'),
 				'type'        => 'price',
 				'default'     => '',
 				'desc_tip'    => true,
-				'description' => 'اگر جمع سبد (بدون هزینهٔ حمل) به این مقدار برسد، کرایه برای کاربر رایگان می‌شود. واحد بر اساس ارز فروشگاه است.',
+				'description' => __('Cart subtotal (excluding shipping) above this amount makes shipping free. Currency is store currency.', 'bijak'),
 			],
 		];
 	}
@@ -79,10 +79,10 @@ class Shipping_Method extends \WC_Shipping_Method
 
 	public function calculate_shipping($package = [])
 	{
-		$mode           = $this->get_option('mode', 'postpay'); // postpay | prepay
+		$mode           = $this->get_option('mode', 'postpay');
 		$free_threshold = (float) $this->get_option('free_threshold', 0.0);
 
-		$label = $this->title . (($mode === 'prepay') ? ' - پیش‌کرایه' : ' - پس‌کرایه');
+		$label = $this->title . (($mode === 'prepay') ? ' - ' . __('Prepay', 'bijak') : ' - ' . __('Postpay', 'bijak'));
 
 		if ($mode !== 'prepay') {
 			$this->add_rate([
@@ -98,14 +98,7 @@ class Shipping_Method extends \WC_Shipping_Method
 		}
 
 		$origin_city_id = (int) Plugin::opt('origin_city_id', 0);
-
-		/**
-		 * WooCommerce sends checkout updates via AJAX without a dedicated nonce for shipping fields.
-		 * We read fields through Helpers::checkout_field() which unslashes & sanitizes.
-		 * Silence the sniff for this short, well-documented section.
-		 */
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		$dest_city_id = (int) Helpers::checkout_field('bijak_dest_city', 0);
+		$dest_city_id   = (int) Helpers::checkout_field('bijak_dest_city', 0);
 
 		$door_raw = Helpers::checkout_field('bijak_is_door_delivery', '__missing__');
 		if ($door_raw === '__missing__' && function_exists('WC') && WC()->session) {
@@ -113,28 +106,15 @@ class Shipping_Method extends \WC_Shipping_Method
 		} else {
 			$is_door = ((string) $door_raw) === '1';
 		}
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
-
-
 
 		if (! $dest_city_id && function_exists('WC') && WC()->session) {
 			$dest_city_id = (int) WC()->session->get('bijak_dest_city_id', 0);
 		}
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		$door_raw = Helpers::checkout_field('bijak_is_door_delivery', '__missing__');
-		// phpcs:enable
-
-		if ($door_raw === '__missing__' && function_exists('WC') && WC()->session) {
-			$is_door = ((string) WC()->session->get('bijak_is_door_delivery', '1')) === '1';
-		} else {
-			$is_door = ((string) $door_raw) === '1';
-		}
-
 
 		if (! $origin_city_id || ! $dest_city_id) {
 			$this->add_rate([
 				'id'        => $this->get_rate_id(),
-				'label'     => $label . ' (لطفاً شهر مقصد را انتخاب کنید)',
+				'label'     => $label . ' (' . __('Please select destination city', 'bijak') . ')',
 				'cost'      => 0,
 				'taxes'     => false,
 				'meta_data' => [
@@ -144,17 +124,17 @@ class Shipping_Method extends \WC_Shipping_Method
 			return;
 		}
 
-		$api = new Api();
+		$api     = new Api();
 		$line_id = Helpers::resolve_line_id($api, $origin_city_id, $dest_city_id);
 		if (! $line_id) {
 			$this->add_rate([
 				'id'        => $this->get_rate_id(),
-				'label'     => $label . ' (مسیر حمل یافت نشد)',
+				'label'     => $label . ' (' . __('No shipping route found', 'bijak') . ')',
 				'cost'      => 0,
 				'taxes'     => false,
 				'meta_data' => [
 					'bijak_mode' => 'prepay',
-					'bijak_note' => 'خط حمل یافت نشد',
+					'bijak_note' => __('No freight line found', 'bijak'),
 				],
 			]);
 			return;
@@ -164,12 +144,12 @@ class Shipping_Method extends \WC_Shipping_Method
 		if (empty($goods_details)) {
 			$this->add_rate([
 				'id'        => $this->get_rate_id(),
-				'label'     => $label . ' (ابعاد/اقلام نامعتبر)',
+				'label'     => $label . ' (' . __('Invalid dimensions/items', 'bijak') . ')',
 				'cost'      => 0,
 				'taxes'     => false,
 				'meta_data' => [
 					'bijak_mode' => 'prepay',
-					'bijak_note' => 'هیچ آیتمی با ابعاد معتبر در سبد نیست',
+					'bijak_note' => __('No valid items in cart', 'bijak'),
 				],
 			]);
 			return;
@@ -191,7 +171,6 @@ class Shipping_Method extends \WC_Shipping_Method
 			];
 		}
 
-		$api  = new Api();
 		$body = [
 			'goods_info' => [
 				'goods_value'   => $goods_value,
@@ -214,23 +193,17 @@ class Shipping_Method extends \WC_Shipping_Method
 			],
 		];
 
-		$estimate = $api->request('/application/price-estimate', 'POST', $body);
-		$sum_toman = 0.0;
-
-		if (! is_wp_error($estimate) && ! empty($estimate['data'])) {
-			$sum_toman = (float) ($estimate['data']['sum'] ?? 0);
-		}
-
-		$shipping_cost_raw = Helpers::toman_to_store_currency($sum_toman);
-		$shipping_cost     = self::maybe_session_cost($shipping_cost_raw);
-
-		$cart_subtotal = (function_exists('WC') && WC()->cart) ? (float) WC()->cart->get_subtotal() : 0.0;
-		$is_free = ($free_threshold > 0 && $cart_subtotal >= $free_threshold);
+		$estimate    = $api->request('/application/price-estimate', 'POST', $body);
+		$sum_toman   = (! is_wp_error($estimate) && ! empty($estimate['data'])) ? (float) ($estimate['data']['sum'] ?? 0) : 0;
+		$cost_raw    = Helpers::toman_to_store_currency($sum_toman);
+		$final_cost  = self::maybe_session_cost($cost_raw);
+		$cart_total  = (function_exists('WC') && WC()->cart) ? (float) WC()->cart->get_subtotal() : 0.0;
+		$is_free     = ($free_threshold > 0 && $cart_total >= $free_threshold);
 
 		$this->add_rate([
 			'id'        => $this->get_rate_id(),
-			'label'     => $label . ($is_free ? ' (ارسال رایگان)' : ''),
-			'cost'      => $is_free ? 0 : max(0, $shipping_cost),
+			'label'     => $label . ($is_free ? ' (' . __('Free Shipping', 'bijak') . ')' : ''),
+			'cost'      => $is_free ? 0 : max(0, $final_cost),
 			'taxes'     => false,
 			'meta_data' => [
 				'bijak_mode'         => 'prepay',

@@ -15,9 +15,10 @@ class Dashboard
 
     public function add_widget(): void
     {
+        // Title in English to satisfy Plugin Check warnings; fully translatable.
         wp_add_dashboard_widget(
             'bijak_wallet_widget',
-            'بیجک ترابری هوشمند',
+            __('Bijak — Smart Freight', 'bijak'),
             [$this, 'render_widget']
         );
     }
@@ -29,46 +30,34 @@ class Dashboard
 
         $profile = ['ok' => false, 'full_name' => '', 'phone' => '', 'wallet' => 0];
         if ($has_key) {
-            $admin = new Admin();
-            $profile = $this->refresh_profile_like_admin($admin);
+            $profile = $this->refresh_profile();
         }
 
-        $wallet = $has_key ? (int) $profile['wallet']    : 0;
+        $wallet = $has_key ? (int) $profile['wallet']       : 0;
         $full   = $has_key ? (string) $profile['full_name'] : '';
-        $phone  = $has_key ? (string) $profile['phone']  : '';
+        $phone  = $has_key ? (string) $profile['phone']     : '';
 
         $wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
         $orders_url = 'https://my.bijak.ir/panel/myOrders';
 
-        echo '<style>
-            .bijak-dash {display:flex;flex-direction:column;gap:10px}
-            .bijak-dash .row{display:flex;gap:12px;flex-wrap:wrap}
-            .bijak-dash .item{flex:1 1 220px;min-width:220px}
-            .bijak-dash .label{color:#555;font-size:.92em}
-            .bijak-dash .val{display:block;margin-top:4px;font-weight:600}
-            .bijak-dash .badge{display:inline-block;background:#f6f7f7;border:1px solid #e5e5e5;border-radius:999px;padding:6px 10px}
-            .bijak-dash .actions{margin-top:6px;display:flex;gap:8px;flex-wrap:wrap}
-            .bijak-dash .btn{display:inline-block;background:#2271b1;color:#fff !important;border-radius:6px;padding:8px 12px;text-decoration:none}
-            .bijak-dash .btn:hover{background:#135e96;color:#fff !important}
-            .bijak-dash small.muted{color:#666}
-        </style>';
-
         echo '<div class="bijak-dash">';
 
         if (! $has_key) {
-            echo '<p><strong>API Key تنظیم نشده است.</strong> ';
-            echo 'برای مشاهده موجودی کیف پول و سفارش‌ها، لطفاً از ';
-            echo '<a href="' . esc_url(admin_url('admin.php?page=bijak-woo')) . '">تنظیمات بیجک</a> API Key را وارد کنید.</p>';
+            echo '<p><strong>' . esc_html__('API Key is not set.', 'bijak') . '</strong> ';
+            echo esc_html__('To view your wallet balance and orders, please enter your API Key on', 'bijak') . ' ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=bijak-woo')) . '">'
+                . esc_html__('Bijak Settings', 'bijak') . '</a>.';
+            echo '</p>';
         }
 
         echo '<div class="row">';
-        echo '<div class="item"><span class="label">نام مالک حساب</span><span class="val">'
-            . esc_html($full ?: '—') . '</span></div>';
-        echo '<div class="item"><span class="label">شماره موبایل</span><span class="val" style="direction:ltr">'
-            . esc_html($phone ?: '—') . '</span></div>';
-        echo '<div class="item"><span class="label">موجودی کیف پول</span><span class="val"><span class="badge">';
+        echo '<div class="item"><span class="label">' . esc_html__('Account Holder Name', 'bijak') . '</span><span class="val">'
+            . esc_html($full !== '' ? $full : '—') . '</span></div>';
+        echo '<div class="item"><span class="label">' . esc_html__('Phone Number', 'bijak') . '</span><span class="val" style="direction:ltr">'
+            . esc_html($phone !== '' ? $phone : '—') . '</span></div>';
+        echo '<div class="item"><span class="label">' . esc_html__('Wallet Balance', 'bijak') . '</span><span class="val"><span class="badge">';
         if ($has_key) {
-            echo esc_html(number_format_i18n($wallet) . ' تومان');
+            echo esc_html(number_format_i18n($wallet) . ' ' . __('Toman', 'bijak'));
         } else {
             echo esc_html('—');
         }
@@ -76,22 +65,21 @@ class Dashboard
         echo '</div>';
 
         echo '<div class="actions">';
-        echo '<a class="btn" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">شارژ کیف پول</a>';
-        echo '<a class="btn" href="' . esc_url($orders_url) . '" target="_blank" rel="noopener">مشاهده سفارش‌ها</a>';
+        echo '<a class="btn" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up Wallet', 'bijak') . '</a>';
+        echo '<a class="btn" href="' . esc_url($orders_url) . '" target="_blank" rel="noopener">' . esc_html__('View Orders', 'bijak') . '</a>';
         echo '</div>';
 
         echo '</div>';
     }
 
-    private function refresh_profile_like_admin(Admin $admin): array
+    private function refresh_profile(): array
     {
         $key = trim(Plugin::opt('api_key', ''));
         if ($key === '') {
             return ['ok' => false, 'full_name' => '', 'phone' => '', 'wallet' => 0];
         }
 
-        $api = new Api();
-        $res = $api->request('/application/profile');
+        $res = $this->api->request('/application/profile');
 
         if (is_wp_error($res) || empty($res['data'])) {
             return ['ok' => false, 'full_name' => '', 'phone' => '', 'wallet' => 0];
@@ -102,6 +90,7 @@ class Dashboard
         $phone     = Helpers::normalize_phone($d['username'] ?? '');
         $wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
 
+        // persist to options (mirrors Admin behavior)
         $opts = get_option(Plugin::OPT, []);
         if (! is_array($opts)) $opts = [];
         $opts['supplier_full_name'] = sanitize_text_field($full_name);

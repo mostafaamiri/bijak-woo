@@ -1,0 +1,597 @@
+# Copyright (C) 2025 بیجک
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Bijak 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/bijak\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-10-08T12:24:59+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: bijak\n"
+
+#. Plugin Name of the plugin
+#: bijak.php
+msgid "Bijak"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: bijak.php
+msgid "https://github.com/mostafaamiri/bijak_wordpress_plugin"
+msgstr ""
+
+#. Description of the plugin
+#: bijak.php
+msgid "Smart freight shipping for WooCommerce via Bijak. Adds prepay/postpay shipping, live price estimates, and order submission to Bijak."
+msgstr ""
+
+#. Author of the plugin
+#: bijak.php
+msgid "بیجک"
+msgstr ""
+
+#. Author URI of the plugin
+#: bijak.php
+msgid "https://bijak.ir"
+msgstr ""
+
+#: includes/class-admin.php:27
+#: includes/class-admin.php:38
+#: includes/class-admin.php:39
+#: includes/class-admin.php:373
+msgid "Bijak (Smart Freight)"
+msgstr ""
+
+#: includes/class-admin.php:28
+msgid "Bijak (Shipping)"
+msgstr ""
+
+#: includes/class-admin.php:56
+msgid "Origin settings"
+msgstr ""
+
+#: includes/class-admin.php:60
+msgid "Origin city"
+msgstr ""
+
+#: includes/class-admin.php:68
+msgid "Will you deliver to terminal yourself?"
+msgstr ""
+
+#: includes/class-admin.php:76
+msgid "Yes"
+msgstr ""
+
+#: includes/class-admin.php:83
+msgid "Origin address (detailed)"
+msgstr ""
+
+#: includes/class-admin.php:87
+msgid "Origin coordinates (lat,lon)"
+msgstr ""
+
+#: includes/class-admin.php:95
+msgid "Format: latitude,longitude (e.g. 35.6971,51.4041)"
+msgstr ""
+
+#: includes/class-admin.php:103
+msgid "Pickup day for Bijak"
+msgstr ""
+
+#: includes/class-admin.php:107
+msgid "First working day"
+msgstr ""
+
+#: includes/class-admin.php:108
+msgid "Second working day"
+msgstr ""
+
+#: includes/class-admin.php:179
+msgid "Failed to fetch origin cities from API."
+msgstr ""
+
+#: includes/class-admin.php:184
+#: includes/class-checkout.php:58
+msgid "— Select —"
+msgstr ""
+
+#: includes/class-admin.php:272
+#: includes/class-dashboard.php:46
+msgid "API Key is not set."
+msgstr ""
+
+#: includes/class-admin.php:280
+msgid "Failed to fetch profile: "
+msgstr ""
+
+#: includes/class-admin.php:297
+msgid "Profile info synced from Bijak."
+msgstr ""
+
+#: includes/class-admin.php:381
+msgid "Connect to Bijak (API Key)"
+msgstr ""
+
+#: includes/class-admin.php:391
+msgid "Save API Key"
+msgstr ""
+
+#: includes/class-admin.php:394
+msgid "Create API key"
+msgstr ""
+
+#: includes/class-admin.php:396
+msgid "After saving, name/phone/wallet will be synced. If \"Origin address\" is empty, it will be filled from your Bijak profile on first sync."
+msgstr ""
+
+#: includes/class-admin.php:410
+msgid "Bijak account info"
+msgstr ""
+
+#: includes/class-admin.php:412
+msgid "Account holder name"
+msgstr ""
+
+#: includes/class-admin.php:414
+msgid "Name in your Bijak profile"
+msgstr ""
+
+#: includes/class-admin.php:416
+msgid "Phone number"
+msgstr ""
+
+#: includes/class-admin.php:418
+msgid "Phone in Bijak profile"
+msgstr ""
+
+#: includes/class-admin.php:420
+msgid "Wallet balance"
+msgstr ""
+
+#: includes/class-admin.php:426
+#: includes/class-dashboard.php:60
+#: includes/class-status.php:162
+#: assets/js/checkout.js:114
+#: assets/js/checkout.js:116
+msgid "Toman"
+msgstr ""
+
+#: includes/class-admin.php:427
+msgid "Top up wallet"
+msgstr ""
+
+#: includes/class-admin.php:430
+msgid "Bijak wallet"
+msgstr ""
+
+#: includes/class-admin.php:457
+msgid "Bijak:"
+msgstr ""
+
+#. translators: %s: settings url
+#: includes/class-admin.php:460
+#, php-format
+msgid "Please enter your <a href=\"%s\">API Key</a>."
+msgstr ""
+
+#: includes/class-ajax.php:42
+msgid "origin_city_id is required."
+msgstr ""
+
+#: includes/class-ajax.php:73
+#: includes/class-order-sender.php:165
+msgid "Origin city is not configured."
+msgstr ""
+
+#: includes/class-ajax.php:81
+msgid "Shipping route not found."
+msgstr ""
+
+#: includes/class-ajax.php:90
+msgid "Product details not available in cart."
+msgstr ""
+
+#: includes/class-ajax.php:93
+msgid "Product name is missing."
+msgstr ""
+
+#: includes/class-ajax.php:96
+msgid "Product length is missing."
+msgstr ""
+
+#: includes/class-ajax.php:99
+msgid "Product width is missing."
+msgstr ""
+
+#: includes/class-ajax.php:102
+msgid "Product height is missing."
+msgstr ""
+
+#: includes/class-ajax.php:105
+msgid "Product weight is missing."
+msgstr ""
+
+#: includes/class-ajax.php:123
+msgid "Cart is empty or product dimensions are zero."
+msgstr ""
+
+#: includes/class-ajax.php:171
+msgid "Price estimate failed: "
+msgstr ""
+
+#: includes/class-api.php:60
+#, php-format
+msgid "HTTP error %d"
+msgstr ""
+
+#: includes/class-checkout.php:40
+msgid "Shipping with Bijak"
+msgstr ""
+
+#: includes/class-checkout.php:43
+msgid "Your order will be shipped via Bijak."
+msgstr ""
+
+#: includes/class-checkout.php:46
+msgid "Visit Bijak Website"
+msgstr ""
+
+#: includes/class-checkout.php:53
+msgid "Destination city"
+msgstr ""
+
+#: includes/class-checkout.php:72
+#: includes/class-status.php:136
+msgid "Door-to-door delivery"
+msgstr ""
+
+#: includes/class-checkout.php:94
+msgid "Please select a destination city for Bijak shipping."
+msgstr ""
+
+#: includes/class-checkout.php:100
+msgid "Origin address is required in Bijak settings for pickup."
+msgstr ""
+
+#: includes/class-checkout.php:123
+msgid "Bijak: Shipping via Bijak."
+msgstr ""
+
+#: includes/class-dashboard.php:21
+msgid "Bijak — Smart Freight"
+msgstr ""
+
+#: includes/class-dashboard.php:47
+msgid "To view your wallet balance and orders, please enter your API Key on"
+msgstr ""
+
+#: includes/class-dashboard.php:49
+msgid "Bijak Settings"
+msgstr ""
+
+#: includes/class-dashboard.php:54
+msgid "Account Holder Name"
+msgstr ""
+
+#: includes/class-dashboard.php:56
+msgid "Phone Number"
+msgstr ""
+
+#: includes/class-dashboard.php:58
+msgid "Wallet Balance"
+msgstr ""
+
+#: includes/class-dashboard.php:68
+msgid "Top up Wallet"
+msgstr ""
+
+#: includes/class-dashboard.php:69
+msgid "View Orders"
+msgstr ""
+
+#: includes/class-order-sender.php:140
+msgid "Bijak: Sender name or phone is missing."
+msgstr ""
+
+#: includes/class-order-sender.php:142
+msgid "Sender name or phone is missing."
+msgstr ""
+
+#: includes/class-order-sender.php:154
+msgid "Bijak: Receiver name/phone is missing in the invoice."
+msgstr ""
+
+#: includes/class-order-sender.php:156
+msgid "Receiver name/phone is missing in the invoice."
+msgstr ""
+
+#: includes/class-order-sender.php:163
+msgid "Bijak: Origin city is not configured."
+msgstr ""
+
+#: includes/class-order-sender.php:171
+msgid "Bijak: Destination city is not selected."
+msgstr ""
+
+#: includes/class-order-sender.php:173
+msgid "Destination city is not selected."
+msgstr ""
+
+#: includes/class-order-sender.php:179
+msgid "Bijak: No freight line found for the selected route."
+msgstr ""
+
+#: includes/class-order-sender.php:181
+msgid "No freight line found."
+msgstr ""
+
+#: includes/class-order-sender.php:188
+msgid "Bijak: No order item with valid dimensions found."
+msgstr ""
+
+#: includes/class-order-sender.php:190
+msgid "No order item with valid dimensions found."
+msgstr ""
+
+#: includes/class-order-sender.php:215
+msgid "Bijak: Failed to fetch working days/time intervals."
+msgstr ""
+
+#: includes/class-order-sender.php:217
+msgid "Unable to fetch send_data."
+msgstr ""
+
+#: includes/class-order-sender.php:241
+msgid "Bijak: No valid working day or time interval found."
+msgstr ""
+
+#: includes/class-order-sender.php:243
+msgid "Invalid day/interval."
+msgstr ""
+
+#: includes/class-order-sender.php:316
+#, php-format
+msgid "Bijak: Order submission failed. %s"
+msgstr ""
+
+#: includes/class-order-sender.php:326
+#, php-format
+msgid "Bijak: Order submitted. UUID: %s"
+msgstr ""
+
+#: includes/class-order-sender.php:328
+msgid "Invalid response."
+msgstr ""
+
+#: includes/class-order-sender.php:330
+#: includes/class-status.php:75
+msgid "Invalid response from Bijak."
+msgstr ""
+
+#: includes/class-order-sender.php:360
+msgid "Bijak Wallet Pay: UUID is missing; cannot charge wallet."
+msgstr ""
+
+#: includes/class-order-sender.php:373
+#, php-format
+msgid "Bijak Wallet Pay: Error - %s"
+msgstr ""
+
+#: includes/class-order-sender.php:382
+msgid "Bijak Wallet Pay: Order successfully paid from wallet."
+msgstr ""
+
+#: includes/class-order-sender.php:389
+#, php-format
+msgid "Bijak Wallet Pay: Insufficient balance. Payment link: %s"
+msgstr ""
+
+#: includes/class-order-sender.php:393
+msgid "Unsuccessful/unknown payment."
+msgstr ""
+
+#: includes/class-shipping-method.php:15
+#: includes/class-shipping-method.php:27
+#: includes/class-shipping-method.php:45
+msgid "Bijak Shipping"
+msgstr ""
+
+#: includes/class-shipping-method.php:16
+msgid "Enable prepay/postpay shipping via Bijak with optional free shipping threshold."
+msgstr ""
+
+#: includes/class-shipping-method.php:37
+msgid "Enable/Disable"
+msgstr ""
+
+#: includes/class-shipping-method.php:39
+msgid "Enable this shipping method"
+msgstr ""
+
+#: includes/class-shipping-method.php:43
+msgid "Method Title"
+msgstr ""
+
+#: includes/class-shipping-method.php:47
+msgid "This controls the title shown to the customer during checkout."
+msgstr ""
+
+#: includes/class-shipping-method.php:50
+msgid "Shipping Payment Mode"
+msgstr ""
+
+#: includes/class-shipping-method.php:54
+msgid "Postpay (Customer pays at delivery)"
+msgstr ""
+
+#: includes/class-shipping-method.php:55
+msgid "Prepay (Pay in checkout)"
+msgstr ""
+
+#: includes/class-shipping-method.php:57
+msgid "In prepay mode, shipping cost is added to cart. If threshold is reached, it becomes free. Paid from your Bijak wallet."
+msgstr ""
+
+#: includes/class-shipping-method.php:60
+msgid "Free Shipping Threshold (Prepay Only)"
+msgstr ""
+
+#: includes/class-shipping-method.php:64
+msgid "Cart subtotal (excluding shipping) above this amount makes shipping free. Currency is store currency."
+msgstr ""
+
+#: includes/class-shipping-method.php:85
+msgid "Prepay"
+msgstr ""
+
+#: includes/class-shipping-method.php:85
+msgid "Postpay"
+msgstr ""
+
+#: includes/class-shipping-method.php:117
+msgid "Please select destination city"
+msgstr ""
+
+#: includes/class-shipping-method.php:132
+msgid "No shipping route found"
+msgstr ""
+
+#: includes/class-shipping-method.php:137
+msgid "No freight line found"
+msgstr ""
+
+#: includes/class-shipping-method.php:147
+msgid "Invalid dimensions/items"
+msgstr ""
+
+#: includes/class-shipping-method.php:152
+msgid "No valid items in cart"
+msgstr ""
+
+#: includes/class-shipping-method.php:205
+msgid "Free Shipping"
+msgstr ""
+
+#: includes/class-status.php:25
+#: includes/class-status.php:95
+msgid "Bijak Shipping Status"
+msgstr ""
+
+#: includes/class-status.php:62
+msgid "Waiting to be submitted to Bijak."
+msgstr ""
+
+#: includes/class-status.php:69
+msgid "Failed to fetch status from Bijak"
+msgstr ""
+
+#: includes/class-status.php:70
+msgid "Details:"
+msgstr ""
+
+#: includes/class-status.php:85
+msgid "Status: "
+msgstr ""
+
+#: includes/class-status.php:85
+#: includes/class-status.php:147
+msgid "Unknown"
+msgstr ""
+
+#: includes/class-status.php:86
+msgid "Destination: "
+msgstr ""
+
+#: includes/class-status.php:87
+msgid "Bijak Tracking Code: "
+msgstr ""
+
+#: includes/class-status.php:88
+#: includes/class-status.php:170
+msgid "Not issued yet"
+msgstr ""
+
+#: includes/class-status.php:102
+#: includes/class-status.php:114
+#: includes/class-status.php:123
+#: includes/class-status.php:146
+msgid "Status"
+msgstr ""
+
+#: includes/class-status.php:102
+msgid "Waiting for submission to Bijak"
+msgstr ""
+
+#: includes/class-status.php:105
+#: includes/class-status.php:117
+#: includes/class-status.php:125
+#: includes/class-status.php:175
+msgid "View in Bijak"
+msgstr ""
+
+#: includes/class-status.php:114
+msgid "Failed to fetch status"
+msgstr ""
+
+#: includes/class-status.php:115
+msgid "Details"
+msgstr ""
+
+#: includes/class-status.php:123
+msgid "Invalid response from Bijak"
+msgstr ""
+
+#. translators: %s: destination city
+#: includes/class-status.php:139
+#, php-format
+msgid "Delivery to terminal in %s"
+msgstr ""
+
+#: includes/class-status.php:151
+msgid "Destination"
+msgstr ""
+
+#: includes/class-status.php:156
+msgid "Delivery place"
+msgstr ""
+
+#: includes/class-status.php:161
+msgid "Shipping cost"
+msgstr ""
+
+#: includes/class-status.php:166
+msgid "Bijak tracking code"
+msgstr ""
+
+#: includes/class-thankyou.php:29
+msgid "Your order was successfully registered in Bijak."
+msgstr ""
+
+#: includes/class-thankyou.php:31
+msgid "Failed to register order in Bijak."
+msgstr ""
+
+#: includes/class-thankyou.php:34
+msgid "Error:"
+msgstr ""
+
+#: includes/class-thankyou.php:36
+msgid "Please contact support."
+msgstr ""
+
+#: assets/js/checkout.js:99
+msgid "Calculating..."
+msgstr ""
+
+#: assets/js/checkout.js:108
+#: assets/js/checkout.js:126
+msgid "Failed to estimate price"
+msgstr ""
+
+#: assets/js/checkout.js:116
+msgid "Total"
+msgstr ""
