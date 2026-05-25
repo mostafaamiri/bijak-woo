@@ -228,7 +228,7 @@ class Ajax
 				'origin_info' => [
 					'self_delivery'        => $self_delivery,
 					'src'                  => $self_delivery_src,
-					'local_transport_cost' => 0,
+					'local_transport_cost' => max(0, (int) Plugin::opt('local_transport_cost', 0)),
 				],
 				'destination_info' => [
 					'is_door_delivery' => $is_door,

@@ -499,6 +499,14 @@ msgstr "اولین روز کاری"
 msgid "Pickup day for Bijak"
 msgstr "روز تحویل بار بیجک"
 
+#: includes/class-admin.php:126
+msgid "Origin local transport cost"
+msgstr "هزینه حمل درون‌شهری مبدا"
+
+#: includes/class-admin.php:134
+msgid "Enter a non-negative number (Toman)."
+msgstr "یک عدد صفر یا بیشتر وارد کنید (تومان)."
+
 #: includes/class-admin.php:95
 msgid "Format: latitude,longitude (e.g. 35.6971,51.4041)"
 msgstr "قالب: عرض جغرافیایی، طول جغرافیایی (مثلاً ۳۵.۶۹۷۱، ۵۱.۴۰۴۱)"

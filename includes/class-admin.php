@@ -121,6 +121,21 @@ class Admin
 			Plugin::OPT,
 			'origin'
 		);
+		add_settings_field(
+			'local_transport_cost',
+			__('Origin local transport cost', 'bijak'),
+			function () {
+				$val = max(0, intval(Plugin::opt('local_transport_cost', 0)));
+				printf(
+					'<input type="number" class="regular-text" min="0" step="1" name="%s[local_transport_cost]" value="%s" style="direction:ltr;max-width:180px" />',
+					esc_attr(Plugin::OPT),
+					esc_attr((string) $val)
+				);
+				echo '<p class="description">' . esc_html__('Enter a non-negative number (Toman).', 'bijak') . '</p>';
+			},
+			Plugin::OPT,
+			'origin'
+		);
 	}
 
 	/* ---------- Field helpers ---------- */
@@ -235,6 +250,11 @@ class Admin
 				: ($old['delivery_day'] ?? 'first_working');
 		}
 
+		if ( array_key_exists('local_transport_cost', $in) ) {
+			$raw = $in['local_transport_cost'] ?? 0;
+			$num = is_numeric($raw) ? (int) $raw : 0;
+			$out['local_transport_cost'] = max(0, $num);
+		}
 		$api_key = trim($out['api_key'] ?? '');
 
 		if ( $address_included && isset($out['origin_address']) && $out['origin_address'] === '' && $api_key !== '' ) {

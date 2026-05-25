@@ -314,7 +314,7 @@ class Order_Sender {
 				'origin_info' => [
 					'self_delivery'        => $self_delivery,
 					'src'                   => $origin_src,
-					'local_transport_cost' => 0,
+					'local_transport_cost' => max( 0, (int) Plugin::opt( 'local_transport_cost', 0 ) ),
 					'delivery_time'        => $delivery_time,
 				],
 				'destination_info' => [
