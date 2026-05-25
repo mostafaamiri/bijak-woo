@@ -283,7 +283,7 @@ class Admin
 		$d = $res['data'];
 		$full_name = trim(($d['first_name'] ?? '') . ' ' . ($d['last_name'] ?? ''));
 		$phone     = Helpers::normalize_phone($d['username'] ?? '');
-		$wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
+		$wallet    = Helpers::fetch_wallet_inventory($api, (int) Plugin::opt("wallet_inventory", 0));
 
 		$opts = get_option(Plugin::OPT, []);
 		if ( ! is_array($opts) ) {
@@ -317,7 +317,7 @@ class Admin
 
 				$full_name = trim(($d['first_name'] ?? '') . ' ' . ($d['last_name'] ?? ''));
 				$phone     = Helpers::normalize_phone($d['username'] ?? '');
-				$wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
+				$wallet    = Helpers::fetch_wallet_inventory($api, (int) Plugin::opt("wallet_inventory", 0));
 
 				if ( $full_name !== '' ) {
 					$new_arr['supplier_full_name'] = sanitize_text_field($full_name);

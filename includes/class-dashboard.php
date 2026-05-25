@@ -94,7 +94,7 @@ class Dashboard
 		$d = $res['data'];
 		$full_name = trim(($d['first_name'] ?? '') . ' ' . ($d['last_name'] ?? ''));
 		$phone     = Helpers::normalize_phone($d['username'] ?? '');
-		$wallet    = isset($d['inventory']) ? (int) $d['inventory'] : 0;
+		$wallet    = Helpers::fetch_wallet_inventory($this->api, (int) Plugin::opt("wallet_inventory", 0));
 
 		// persist to options (mirrors Admin behavior)
 		$opts = get_option(Plugin::OPT, []);

@@ -88,9 +88,7 @@ class Order_Sender {
 				$opts['supplier_full_name'] = sanitize_text_field( $full_name );
 				$opts['supplier_phone']     = sanitize_text_field( $phone_norm );
 
-				if ( isset( $d['inventory'] ) ) {
-					$opts['wallet_inventory'] = max( 0, (int) $d['inventory'] );
-				}
+				$opts["wallet_inventory"] = Helpers::fetch_wallet_inventory( $this->api, (int) ( $opts["wallet_inventory"] ?? 0 ) );
 				update_option( Plugin::OPT, $opts );
 
 				return [ 'full_name' => $full_name, 'phone' => $phone_norm ];

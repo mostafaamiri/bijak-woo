@@ -193,6 +193,27 @@ class Helpers
 		);
 	}
 
+
+	public static function fetch_wallet_inventory(Api $api, int $default = 0): int
+	{
+		$fallback = max(0, $default);
+		$res = $api->request("/application/inventory");
+
+		if (is_wp_error($res) || ! is_array($res)) {
+			return $fallback;
+		}
+
+		if (isset($res["inventory"])) {
+			return max(0, (int) $res["inventory"]);
+		}
+
+		if (! empty($res["data"]) && is_array($res["data"]) && isset($res["data"]["inventory"])) {
+			return max(0, (int) $res["data"]["inventory"]);
+		}
+
+		return $fallback;
+	}
+
 	// Backward-compatible wrapper.
 	public static function resolve_line_id(Api $api, int $origin_city_id, int $dest_city_id): ?int
 	{

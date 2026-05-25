@@ -1,6 +1,6 @@
 === Bijak ===
 Contributors: bijak
-Plugin URI: https://github.com/mostafaamiri/bijak_wordpress_plugin
+Plugin URI: https://wordpress.org/plugins/bijak/
 Donate link: https://bijak.ir
 Tags: shipping, woocommerce, logistics, delivery, iran
 Requires at least: 5.8
