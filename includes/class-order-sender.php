@@ -66,6 +66,7 @@ class Order_Sender {
 		$this->set_order_meta( $order, '_bijak_error_message', $message );
 	}
 
+
 	private function ensure_supplier_from_options_or_api(): array {
 		$full_name  = sanitize_text_field( Plugin::opt( 'supplier_full_name', '' ) );
 		$phone_norm = Helpers::normalize_phone( Plugin::opt( 'supplier_phone', '' ) );
@@ -336,6 +337,7 @@ class Order_Sender {
 			return;
 		}
 
+
 		if ( ! empty( $res['success'] ) && ! empty( $res['order_uuid'] ) ) {
 			$this->set_order_meta( $order, '_bijak_order_uuid', sanitize_text_field( (string) $res['order_uuid'] ) );
 			$this->set_order_meta( $order, '_bijak_status', 'success' );
@@ -372,7 +374,16 @@ class Order_Sender {
 		if ( empty( $uuid ) ) {
 			// Not yet submitted to Bijak; try now
 			$this->maybe_send_on_thankyou( $order->get_id() );
+
+			$reloaded_order = wc_get_order( $order->get_id() );
+			if ( $reloaded_order instanceof \WC_Order ) {
+				$order = $reloaded_order;
+			}
+
 			$uuid = $this->get_order_meta( $order, '_bijak_order_uuid', '' );
+			if ( empty( $uuid ) ) {
+				$uuid = (string) get_post_meta( $order->get_id(), '_bijak_order_uuid', true );
+			}
 
 			if ( empty( $uuid ) ) {
 				$order->add_order_note( __( 'Bijak Wallet Pay: UUID is missing; cannot charge wallet.', 'bijak' ) );
@@ -382,8 +393,9 @@ class Order_Sender {
 
 		$this->set_order_meta( $order, '_bijak_wallet_pay_attempted', 1 );
 
-		$res = $this->api->request( '/application/pay_order', 'POST', [
-			'order_uuid' => $uuid,
+
+		$payment_endpoint = '/application/orders/' . (string) $uuid . '/payments';
+		$res = $this->api->request( $payment_endpoint, 'POST', [
 			'use_wallet' => true,
 		] );
 
