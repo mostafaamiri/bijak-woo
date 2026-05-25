@@ -8,18 +8,30 @@ if (! defined('ABSPATH')) {
 
 class Status_Display
 {
-	public function __construct(private Api $api) {}
+	/** @var Api */
+	private $api;
+
+	public function __construct(Api $api)
+	{
+		$this->api = $api;
+	}
 
 	public function register()
 	{
 		add_action('woocommerce_order_details_after_order_table', [$this, 'render_after_table'], 20, 1);
+
+		// Legacy order editor and HPOS order editor.
+		add_action('add_meta_boxes', [$this, 'add_metabox']);
 		add_action('add_meta_boxes_shop_order', [$this, 'add_metabox']);
+		add_action('add_meta_boxes_woocommerce_page_wc-orders', [$this, 'add_metabox']);
 	}
 
-	/* ------------------------------------------------------------------ */
-
-	public function add_metabox()
+	public function add_metabox($post_type = '', $post = null)
 	{
+		$hpos_screen = function_exists('wc_get_page_screen_id')
+			? wc_get_page_screen_id('shop-order')
+			: 'woocommerce_page_wc-orders';
+
 		add_meta_box(
 			'bijak_status',
 			__('Bijak Shipping Status', 'bijak'),
@@ -28,11 +40,36 @@ class Status_Display
 			'side',
 			'high'
 		);
+
+		if ($hpos_screen && $hpos_screen !== 'shop_order') {
+			add_meta_box(
+				'bijak_status',
+				__('Bijak Shipping Status', 'bijak'),
+				[$this, 'render_admin_box'],
+				$hpos_screen,
+				'side',
+				'high'
+			);
+		}
 	}
 
 	public function render_admin_box($post)
 	{
-		$order_id = is_numeric($post) ? (int) $post : (int) $post->ID;
+		if ($post instanceof \WC_Order) {
+			$order_id = (int) $post->get_id();
+		} elseif (is_numeric($post)) {
+			$order_id = (int) $post;
+		} elseif (is_object($post) && isset($post->ID)) {
+			$order_id = (int) $post->ID;
+		} else {
+			$order_id = 0;
+		}
+
+		if ($order_id <= 0) {
+			echo wp_kses_post('<p>' . esc_html__('Order not found.', 'bijak') . '</p>');
+			return;
+		}
+
 		echo wp_kses_post($this->get_status_html($order_id, 'admin'));
 	}
 
@@ -45,13 +82,22 @@ class Status_Display
 		echo wp_kses_post($this->get_status_html($order_id, 'front'));
 	}
 
-	/* ------------------------------------------------------------------ */
+	private function order_meta(int $order_id, string $key, $default = '')
+	{
+		$order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+		if ($order instanceof \WC_Order) {
+			$value = $order->get_meta($key, true);
+			return $value === '' ? $default : $value;
+		}
+
+		$value = get_post_meta($order_id, $key, true);
+		return $value === '' ? $default : $value;
+	}
 
 	private function get_status_html(int $order_id, string $context = 'front'): string
 	{
-		$uuid = get_post_meta($order_id, '_bijak_order_uuid', true);
+		$uuid = (string) $this->order_meta($order_id, '_bijak_order_uuid', '');
 
-		/* ---------- Admin view (metabox) ---------- */
 		if ($context === 'admin') {
 			$wrap_open  = '<div class="inside" style="padding:8px 0;">';
 			$wrap_close = '</div>';

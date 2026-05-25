@@ -29,7 +29,7 @@ class Assets
 			BIJAK_WOO_VER
 		);
 
-		$deps = ['jquery'];
+		$deps = ['jquery', 'wp-i18n'];
 		if (wp_script_is('wc-checkout', 'registered')) {
 			$deps[] = 'wc-checkout';
 		}

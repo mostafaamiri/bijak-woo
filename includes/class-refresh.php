@@ -16,7 +16,11 @@ class Refresh_Shipping
 
 	public static function refresh_rates($post_data)
 	{
-		if (isset(WC()->session) && WC()->session->get('bijak_estimate_cost') > 0) {
+		if (! function_exists('WC') || ! WC() || ! WC()->session || ! WC()->cart) {
+			return;
+		}
+
+		if (WC()->session->get('bijak_estimate_cost') > 0) {
 			foreach (WC()->cart->get_shipping_packages() as $key => $pkg) {
 				WC()->session->set('shipping_for_package_' . $key, false);
 			}
@@ -26,16 +30,20 @@ class Refresh_Shipping
 
 	public static function clear_session()
 	{
-		if (isset(WC()->session)) {
-			WC()->session->__unset('bijak_estimate_cost');
-			WC()->session->__unset('bijak_dest_city_id');
-			WC()->session->__unset('bijak_is_door_delivery');
+		if (! function_exists('WC') || ! WC() || ! WC()->session) {
+			return;
 		}
+
+		WC()->session->__unset('bijak_estimate_cost');
+		WC()->session->__unset('bijak_dest_city_id');
+		WC()->session->__unset('bijak_is_door_delivery');
 	}
 
 	public static function clear_session_on_entry()
 	{
-		if (! function_exists('is_checkout') || ! is_checkout()) return;
+		if (! function_exists('is_checkout') || ! is_checkout()) {
+			return;
+		}
 		self::clear_session();
 	}
 }

@@ -13,15 +13,21 @@ class Thankyou
 
 	public function render($order_id): void
 	{
-		if (! $order_id) return;
+		if (! $order_id) {
+			return;
+		}
 
-		$order = wc_get_order($order_id);
-		if (! $order) return;
+		$order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+		if (! $order instanceof \WC_Order) {
+			return;
+		}
 
-		$status = get_post_meta($order_id, '_bijak_status', true);
-		$error  = get_post_meta($order_id, '_bijak_error_message', true);
+		$status = (string) $order->get_meta('_bijak_status', true);
+		$error  = (string) $order->get_meta('_bijak_error_message', true);
 
-		if ($status === '') return;
+		if ($status === '') {
+			return;
+		}
 
 		echo '<div class="woocommerce-message" style="margin-top:16px;">';
 

@@ -25,7 +25,7 @@ class Checkout
 			$chosen = sanitize_text_field(wp_unslash($_POST['shipping_method'][0]));
 		}
 		// phpcs:enable
-		return ($chosen !== '') && str_starts_with($chosen, 'bijak_pay_at_dest');
+		return ($chosen !== '') && strpos($chosen, 'bijak_pay_at_dest') === 0;
 	}
 
 	public function render_box(): void
@@ -108,6 +108,8 @@ class Checkout
 			return;
 		}
 
+		$order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+
 		foreach (['bijak_dest_city', 'bijak_is_door_delivery'] as $key) {
 			// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if (isset($_POST[$key])) {
@@ -116,10 +118,23 @@ class Checkout
 					? array_map('sanitize_text_field', $raw)
 					: sanitize_text_field($raw);
 				// phpcs:enable
-				update_post_meta($order_id, '_' . $key, $val);
+
+				if ($order instanceof \WC_Order) {
+					$order->update_meta_data('_' . $key, $val);
+				} else {
+					update_post_meta($order_id, '_' . $key, $val);
+				}
 			}
 		}
 
-		wc_get_order($order_id)?->add_order_note(__('Bijak: Shipping via Bijak.', 'bijak'));
+		if ($order instanceof \WC_Order) {
+			$order->save();
+			$order->add_order_note(__('Bijak: Shipping via Bijak.', 'bijak'));
+		} else {
+			$legacy_order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+			if ($legacy_order instanceof \WC_Order) {
+				$legacy_order->add_order_note(__('Bijak: Shipping via Bijak.', 'bijak'));
+			}
+		}
 	}
 }

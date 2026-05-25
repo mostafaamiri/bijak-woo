@@ -4,11 +4,11 @@ Plugin URI: https://github.com/mostafaamiri/bijak_wordpress_plugin
 Donate link: https://bijak.ir
 Tags: shipping, woocommerce, logistics, delivery, iran
 Requires at least: 5.8
-Tested up to: 6.8
+Tested up to: 7.0
 Requires PHP: 7.4
 WC requires at least: 5.5
-WC tested up to: 8.9
-Stable tag: 1.0.0
+WC tested up to: 10.7
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,8 +62,8 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 
 **Service Provider**
 - Bijak (https://bijak.ir)  
-- Terms of Service: https://bijak.ir/%D9%82%D9%88%D8%A7%D9%86%DB%8C%D9%86-%D8%B3%D8%A7%D9%85%D8%A7%D9%86%D9%87-%D8%A8%DB%8C%D8%AC%DA%A9/
-- Privacy Policy: https://bijak.ir/%D9%82%D9%88%D8%A7%D9%86%DB%8C%D9%86-%D8%B3%D8%A7%D9%85%D8%A7%D9%86%D9%87-%D8%A8%DB%8C%D8%AC%DA%A9/
+- Terms of Service: https://bijak.ir/privacy-policy/
+- Privacy Policy: https://bijak.ir/privacy-policy/
 
 == Screenshots ==
 
@@ -74,6 +74,12 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 
 == Changelog ==
 
+= 1.0.1 =
+* Added WooCommerce HPOS compatibility declaration and order-meta handling through `WC_Order` APIs
+* Added support for HPOS order editor metabox
+* Replaced PHP 8-only syntax so plugin stays compatible with PHP 7.4+
+* Updated compatibility metadata for latest WordPress and WooCommerce releases
+
 = 1.0.0 =
 * Initial public release
 * Integration with Bijak API for real-time rate estimation
@@ -82,5 +88,5 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-First official release of the Bijak Smart Freight plugin for WooCommerce.
+= 1.0.1 =
+Compatibility update for latest WooCommerce/WordPress while preserving backward support.

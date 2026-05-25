@@ -8,7 +8,7 @@ if (! defined('ABSPATH')) exit;
 
 class Api
 {
-	private const API_BASE = 'https://divar.bijak.ir/';
+	private const API_BASE = 'https://testapi.barsaman.com/';
 	private const TIMEOUT  = 15;
 
 	/**

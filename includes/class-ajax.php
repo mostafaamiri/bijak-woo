@@ -2,15 +2,19 @@
 
 namespace BIJAK\BijakWoo;
 
-use WP_Error;
-
 if (! defined('ABSPATH')) {
 	exit;
 }
 
 class Ajax
 {
-	public function __construct(private Api $api) {}
+	/** @var Api */
+	private $api;
+
+	public function __construct(Api $api)
+	{
+		$this->api = $api;
+	}
 
 	public function register(): void
 	{
@@ -63,7 +67,7 @@ class Ajax
 
 		$set_session_cost = function (float $toman) {
 			$store_cost = Helpers::toman_to_store_currency($toman);
-			if (WC()->session) {
+			if (function_exists('WC') && WC()->session) {
 				WC()->session->set('bijak_estimate_cost', $store_cost);
 			}
 		};
@@ -83,7 +87,7 @@ class Ajax
 		$line_id = intval($freights['data'][0]['line_id']);
 
 		$goods_details = [];
-		if (WC()->cart && ! WC()->cart->is_empty()) {
+		if (function_exists('WC') && WC()->cart && ! WC()->cart->is_empty()) {
 			foreach (WC()->cart->get_cart() as $item) {
 				$p = $item['data'];
 				if (! $p) {
@@ -124,7 +128,7 @@ class Ajax
 		}
 
 		$goods_value = 0;
-		if (WC()->cart) {
+		if (function_exists('WC') && WC()->cart) {
 			$totals = WC()->cart->get_totals();
 			$goods_value = isset($totals['total']) ? (int) round($totals['total']) : 0;
 		}
@@ -165,7 +169,7 @@ class Ajax
 		$res = $this->api->request('/application/price-estimate', 'POST', $body);
 
 		if (is_wp_error($res)) {
-			if (WC()->session) {
+			if (function_exists('WC') && WC()->session) {
 				WC()->session->__unset('bijak_estimate_cost');
 			}
 			wp_send_json_error(['message' => __('Price estimate failed: ', 'bijak') . $res->get_error_message()]);

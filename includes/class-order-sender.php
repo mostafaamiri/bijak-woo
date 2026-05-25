@@ -8,7 +8,12 @@ if ( ! defined('ABSPATH') ) {
 
 class Order_Sender {
 
-	public function __construct( private Api $api ) {}
+	/** @var Api */
+	private $api;
+
+	public function __construct(Api $api) {
+		$this->api = $api;
+	}
 
 	public function register(): void {
 		// Queue sending to Bijak after checkout is processed.
@@ -44,6 +49,21 @@ class Order_Sender {
 			}
 		}
 		return 'postpay';
+	}
+
+	private function get_order_meta( \WC_Order $order, string $key, $default = '' ) {
+		$value = $order->get_meta( $key, true );
+		return $value === '' ? $default : $value;
+	}
+
+	private function set_order_meta( \WC_Order $order, string $key, $value ): void {
+		$order->update_meta_data( $key, $value );
+		$order->save_meta_data();
+	}
+
+	private function set_order_error( \WC_Order $order, string $message ): void {
+		$this->set_order_meta( $order, '_bijak_status', 'error' );
+		$this->set_order_meta( $order, '_bijak_error_message', $message );
 	}
 
 	private function ensure_supplier_from_options_or_api(): array {
@@ -84,32 +104,44 @@ class Order_Sender {
 	}
 
 	public function queue_send_order( $order_id, $posted_data, $order ): void {
-		if ( get_post_meta( $order_id, '_bijak_order_uuid', true ) ) {
-			return;
-		}
 		if ( ! $order instanceof \WC_Order ) {
 			$order = wc_get_order( $order_id );
 		}
-		if ( ! $order || ! $this->order_uses_bijak( $order ) ) {
+
+		if ( ! $order ) {
+			return;
+		}
+
+		if ( $this->get_order_meta( $order, '_bijak_order_uuid', '' ) ) {
+			return;
+		}
+
+		if ( ! $this->order_uses_bijak( $order ) ) {
 			return;
 		}
 
 		if ( function_exists( 'as_enqueue_async_action' ) ) {
-			as_enqueue_async_action( 'bijak_send_order', [ 'order_id' => $order_id ], 'bijak' );
+			as_enqueue_async_action( 'bijak_send_order', [ 'order_id' => $order->get_id() ], 'bijak' );
 		} else {
-			$this->send_to_bijak( [ 'order_id' => $order_id ] );
+			$this->send_to_bijak( [ 'order_id' => $order->get_id() ] );
 		}
 	}
 
 	public function maybe_send_on_thankyou( $order_id ): void {
-		if ( ! $order_id || get_post_meta( $order_id, '_bijak_order_uuid', true ) ) {
+		if ( ! $order_id ) {
 			return;
 		}
+
 		$order = wc_get_order( $order_id );
 		if ( ! $order || ! $this->order_uses_bijak( $order ) ) {
 			return;
 		}
-		$this->send_to_bijak( [ 'order_id' => $order_id ] );
+
+		if ( $this->get_order_meta( $order, '_bijak_order_uuid', '' ) ) {
+			return;
+		}
+
+		$this->send_to_bijak( [ 'order_id' => $order->get_id() ] );
 	}
 
 	public function send_to_bijak( $args ): void {
@@ -138,8 +170,7 @@ class Order_Sender {
 
 			if ( $supplier_name === '' || $supplier_phone === '' ) {
 				$order->add_order_note( __( 'Bijak: Sender name or phone is missing.', 'bijak' ) );
-				update_post_meta( $order_id, '_bijak_status', 'error' );
-				update_post_meta( $order_id, '_bijak_error_message', __( 'Sender name or phone is missing.', 'bijak' ) );
+				$this->set_order_error( $order, __( 'Sender name or phone is missing.', 'bijak' ) );
 				return;
 			}
 		}
@@ -152,8 +183,7 @@ class Order_Sender {
 		$rec_phone = Helpers::normalize_phone( $order->get_billing_phone() );
 		if ( $rec_name === '' || $rec_phone === '' ) {
 			$order->add_order_note( __( 'Bijak: Receiver name/phone is missing in the invoice.', 'bijak' ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'Receiver name/phone is missing in the invoice.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'Receiver name/phone is missing in the invoice.', 'bijak' ) );
 			return;
 		}
 
@@ -161,24 +191,21 @@ class Order_Sender {
 		$origin_city_id = intval( Plugin::opt( 'origin_city_id', 0 ) );
 		if ( ! $origin_city_id ) {
 			$order->add_order_note( __( 'Bijak: Origin city is not configured.', 'bijak' ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'Origin city is not configured.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'Origin city is not configured.', 'bijak' ) );
 			return;
 		}
 
-		$dest_city_id = intval( get_post_meta( $order_id, '_bijak_dest_city', true ) );
+		$dest_city_id = intval( $this->get_order_meta( $order, '_bijak_dest_city', 0 ) );
 		if ( ! $dest_city_id ) {
 			$order->add_order_note( __( 'Bijak: Destination city is not selected.', 'bijak' ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'Destination city is not selected.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'Destination city is not selected.', 'bijak' ) );
 			return;
 		}
 
 		$line_id = Helpers::resolve_line_id( $this->api, $origin_city_id, $dest_city_id );
 		if ( ! $line_id ) {
 			$order->add_order_note( __( 'Bijak: No freight line found for the selected route.', 'bijak' ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'No freight line found.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'No freight line found.', 'bijak' ) );
 			return;
 		}
 
@@ -186,14 +213,13 @@ class Order_Sender {
 		$goods_details = Helpers::build_goods_details_from_order( $order );
 		if ( empty( $goods_details ) ) {
 			$order->add_order_note( __( 'Bijak: No order item with valid dimensions found.', 'bijak' ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'No order item with valid dimensions found.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'No order item with valid dimensions found.', 'bijak' ) );
 			return;
 		}
 
 		$self_delivery = Plugin::opt( 'self_delivery', 'yes' ) === 'yes';
 
-		$is_door     = get_post_meta( $order_id, '_bijak_is_door_delivery', true ) === '1';
+		$is_door     = $this->get_order_meta( $order, '_bijak_is_door_delivery', '' ) === '1';
 		$goods_value = max( 1000, (int) round( $order->get_total() ) );
 
 		// Address (fallbacks between shipping and billing)
@@ -213,8 +239,7 @@ class Order_Sender {
 			$sendData = $this->api->request( "/application/send_data/{$origin_city_id}" );
 			if ( is_wp_error( $sendData ) || empty( $sendData['data'] ) ) {
 				$order->add_order_note( __( 'Bijak: Failed to fetch working days/time intervals.', 'bijak' ) );
-				update_post_meta( $order_id, '_bijak_status', 'error' );
-				update_post_meta( $order_id, '_bijak_error_message', __( 'Unable to fetch send_data.', 'bijak' ) );
+				$this->set_order_error( $order, __( 'Unable to fetch send_data.', 'bijak' ) );
 				return;
 			}
 			$data = $sendData['data'];
@@ -239,8 +264,7 @@ class Order_Sender {
 
 			if ( $interval_id === 0 || $day_id === 0 ) {
 				$order->add_order_note( __( 'Bijak: No valid working day or time interval found.', 'bijak' ) );
-				update_post_meta( $order_id, '_bijak_status', 'error' );
-				update_post_meta( $order_id, '_bijak_error_message', __( 'Invalid day/interval.', 'bijak' ) );
+				$this->set_order_error( $order, __( 'Invalid day/interval.', 'bijak' ) );
 				return;
 			}
 
@@ -315,21 +339,19 @@ class Order_Sender {
 			$log( 'Bijak order failed #' . $order_id . ' | ' . $err . ' | api=' . ( is_string( $api ) ? $api : wp_json_encode( $api, JSON_UNESCAPED_UNICODE ) ) );
 			// translators: %s is the error message returned from the Bijak API.
 			$order->add_order_note( sprintf( __( 'Bijak: Order submission failed. %s', 'bijak' ), $err ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', $err );
+			$this->set_order_error( $order, $err );
 			return;
 		}
 
 		if ( ! empty( $res['success'] ) && ! empty( $res['order_uuid'] ) ) {
-			update_post_meta( $order_id, '_bijak_order_uuid', sanitize_text_field( (string) $res['order_uuid'] ) );
-			update_post_meta( $order_id, '_bijak_status', 'success' );
-			update_post_meta( $order_id, '_bijak_error_message', '' );
+			$this->set_order_meta( $order, '_bijak_order_uuid', sanitize_text_field( (string) $res['order_uuid'] ) );
+			$this->set_order_meta( $order, '_bijak_status', 'success' );
+			$this->set_order_meta( $order, '_bijak_error_message', '' );
 			// translators: %s is the UUID returned from Bijak after order submission.
 			$order->add_order_note( sprintf( __( 'Bijak: Order submitted. UUID: %s', 'bijak' ), (string) $res['order_uuid'] ) );
 		} else {
 			$order->add_order_note( 'Bijak: ' . __( 'Invalid response.', 'bijak' ) . ' ' . wp_json_encode( $res, JSON_UNESCAPED_UNICODE ) );
-			update_post_meta( $order_id, '_bijak_status', 'error' );
-			update_post_meta( $order_id, '_bijak_error_message', __( 'Invalid response from Bijak.', 'bijak' ) );
+			$this->set_order_error( $order, __( 'Invalid response from Bijak.', 'bijak' ) );
 		}
 	}
 
@@ -345,26 +367,27 @@ class Order_Sender {
 		}
 
 		// Prevent duplicates
-		if ( get_post_meta( $order->get_id(), '_bijak_wallet_paid_state', true ) === 'Paid' ) {
+		if ( $this->get_order_meta( $order, '_bijak_wallet_paid_state', '' ) === 'Paid' ) {
 			return;
 		}
-		if ( get_post_meta( $order->get_id(), '_bijak_wallet_pay_attempted', true ) ) {
+		if ( $this->get_order_meta( $order, '_bijak_wallet_pay_attempted', '' ) ) {
 			// Already attempted; remove this guard if you need retries.
 			return;
 		}
 
-		$uuid = get_post_meta( $order->get_id(), '_bijak_order_uuid', true );
+		$uuid = $this->get_order_meta( $order, '_bijak_order_uuid', '' );
 		if ( empty( $uuid ) ) {
 			// Not yet submitted to Bijak; try now
 			$this->maybe_send_on_thankyou( $order->get_id() );
-			$uuid = get_post_meta( $order->get_id(), '_bijak_order_uuid', true );
+			$uuid = $this->get_order_meta( $order, '_bijak_order_uuid', '' );
+
 			if ( empty( $uuid ) ) {
 				$order->add_order_note( __( 'Bijak Wallet Pay: UUID is missing; cannot charge wallet.', 'bijak' ) );
 				return;
 			}
 		}
 
-		update_post_meta( $order->get_id(), '_bijak_wallet_pay_attempted', 1 );
+		$this->set_order_meta( $order, '_bijak_wallet_pay_attempted', 1 );
 
 		$res = $this->api->request( '/application/pay_order', 'POST', [
 			'order_uuid' => $uuid,
@@ -381,14 +404,14 @@ class Order_Sender {
 		$success = ! empty( $res['success'] );
 
 		if ( $success && $state === 'Paid' ) {
-			update_post_meta( $order->get_id(), '_bijak_wallet_paid_state', 'Paid' );
+			$this->set_order_meta( $order, '_bijak_wallet_paid_state', 'Paid' );
 			$order->add_order_note( __( 'Bijak Wallet Pay: Order successfully paid from wallet.', 'bijak' ) );
 			return;
 		}
 
 		if ( $success && $state === 'Paying' && ! empty( $res['data']['payment_link'] ) ) {
 			$link = (string) $res['data']['payment_link'];
-			update_post_meta( $order->get_id(), '_bijak_wallet_paid_state', 'Paying' );
+			$this->set_order_meta( $order, '_bijak_wallet_paid_state', 'Paying' );
 			// translators: %s is the payment link for completing wallet payment.
 			$order->add_order_note( sprintf( __( 'Bijak Wallet Pay: Insufficient balance. Payment link: %s', 'bijak' ), $link ) );
 			return;
