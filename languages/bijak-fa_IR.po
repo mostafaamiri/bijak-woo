@@ -224,7 +224,7 @@ msgstr "پاسخ نامعتبر."
 #. translators: %s is the UUID returned from Bijak after order submission.
 #: includes/class-order-sender.php:328
 msgid "Bijak: Order submitted. UUID: %s"
-msgstr "بیجاک: سفارش ارسال شد. شناسه سفارش: %s"
+msgstr "بیجک: سفارش ارسال شد. شناسه سفارش: %s"
 
 #. translators: %s is the error message returned from the Bijak API.
 #: includes/class-order-sender.php:317

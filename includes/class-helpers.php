@@ -119,13 +119,85 @@ class Helpers
 		}
 	}
 
+	/**
+	 * Output example:
+	 * [
+	 *   [110],
+	 *   [113, 320],
+	 * ]
+	 */
+	public static function extract_route_line_id_groups(array $routes_response): array
+	{
+		$routes = [];
+
+		if (! empty($routes_response['routes']) && is_array($routes_response['routes'])) {
+			$routes = $routes_response['routes'];
+		} elseif (! empty($routes_response['data']['routes']) && is_array($routes_response['data']['routes'])) {
+			$routes = $routes_response['data']['routes'];
+		}
+
+		$groups = [];
+		foreach ($routes as $route) {
+			if (! is_array($route) || empty($route)) {
+				continue;
+			}
+
+			$segment_first_line_ids = [];
+			foreach ($route as $segment) {
+				if (! is_array($segment) || empty($segment['lines']) || ! is_array($segment['lines'])) {
+					$segment_first_line_ids = [];
+					break;
+				}
+
+				$first_line    = $segment['lines'][0] ?? null;
+				$first_line_id = (is_array($first_line) && ! empty($first_line['id'])) ? intval($first_line['id']) : 0;
+
+				if ($first_line_id <= 0) {
+					$segment_first_line_ids = [];
+					break;
+				}
+
+				$segment_first_line_ids[] = $first_line_id;
+			}
+
+			if (! empty($segment_first_line_ids)) {
+				$groups[] = array_values($segment_first_line_ids);
+			}
+		}
+
+		return $groups;
+	}
+
+	/**
+	 * Returns first route option line IDs, using first line of each segment.
+	 */
+	public static function resolve_line_ids(Api $api, int $origin_city_id, int $dest_city_id): array
+	{
+		$routes_response = $api->request("/application/routes?origin_city_id={$origin_city_id}&destination_city_id={$dest_city_id}");
+		if (is_wp_error($routes_response)) {
+			return [];
+		}
+
+		$groups = self::extract_route_line_id_groups(is_array($routes_response) ? $routes_response : []);
+		if (empty($groups) || empty($groups[0]) || ! is_array($groups[0])) {
+			return [];
+		}
+
+		return array_values(
+			array_filter(
+				array_map('intval', $groups[0]),
+				static function ($id) {
+					return $id > 0;
+				}
+			)
+		);
+	}
+
+	// Backward-compatible wrapper.
 	public static function resolve_line_id(Api $api, int $origin_city_id, int $dest_city_id): ?int
 	{
-		$freights = $api->request("/application/freights/?origin_city_id={$origin_city_id}&destination_city_id={$dest_city_id}");
-		if (is_wp_error($freights) || empty($freights['data'][0]['line_id'])) {
-			return null;
-		}
-		return (int) $freights['data'][0]['line_id'];
+		$line_ids = self::resolve_line_ids($api, $origin_city_id, $dest_city_id);
+		return ! empty($line_ids) ? (int) $line_ids[0] : null;
 	}
 
 	/** Convert Toman to store currency (IRR=×10) */

@@ -46,11 +46,65 @@ class Ajax
 			wp_send_json_error(['message' => __('origin_city_id is required.', 'bijak')]);
 		}
 
-		$r = $this->api->request('/application/terminals/?type=destination&city_id=' . $origin_city_id);
+		$r = $this->api->request('/application/terminals?type=destination&city_id=' . $origin_city_id);
 
 		is_wp_error($r)
 			? wp_send_json_error(['message' => $r->get_error_message()])
 			: wp_send_json_success($r);
+	}
+
+	/**
+	 * Extract route line IDs from /application/routes response.
+	 *
+	 * Each top-level item in `routes` is one route option.
+	 * For each segment inside that route, we take the first line ID.
+	 *
+	 * Output example:
+	 * [
+	 *   [110],
+	 *   [113, 320],
+	 * ]
+	 */
+	private function extract_route_line_id_groups(array $routes_response): array
+	{
+		$routes = [];
+
+		if (! empty($routes_response['routes']) && is_array($routes_response['routes'])) {
+			$routes = $routes_response['routes'];
+		} elseif (! empty($routes_response['data']['routes']) && is_array($routes_response['data']['routes'])) {
+			$routes = $routes_response['data']['routes'];
+		}
+
+		$groups = [];
+		foreach ($routes as $route) {
+			if (! is_array($route) || empty($route)) {
+				continue;
+			}
+
+			$segment_first_line_ids = [];
+			foreach ($route as $segment) {
+				if (! is_array($segment) || empty($segment['lines']) || ! is_array($segment['lines'])) {
+					$segment_first_line_ids = [];
+					break;
+				}
+
+				$first_line    = $segment['lines'][0] ?? null;
+				$first_line_id = (is_array($first_line) && ! empty($first_line['id'])) ? intval($first_line['id']) : 0;
+
+				if ($first_line_id <= 0) {
+					$segment_first_line_ids = [];
+					break;
+				}
+
+				$segment_first_line_ids[] = $first_line_id;
+			}
+
+			if (! empty($segment_first_line_ids)) {
+				$groups[] = $segment_first_line_ids;
+			}
+		}
+
+		return $groups;
 	}
 
 	public function price_estimate(): void
@@ -77,14 +131,35 @@ class Ajax
 			wp_send_json_error(['message' => __('Origin city is not configured.', 'bijak')]);
 		}
 
-		$freights = $this->api->request(
-			"/application/freights/?origin_city_id={$origin_city_id}&destination_city_id={$dest_city_id}"
+		$routes_res = $this->api->request(
+			"/application/routes?origin_city_id={$origin_city_id}&destination_city_id={$dest_city_id}"
 		);
 
-		if (is_wp_error($freights) || empty($freights['data'][0]['line_id'])) {
+		if (is_wp_error($routes_res)) {
 			wp_send_json_error(['message' => __('Shipping route not found.', 'bijak')]);
 		}
-		$line_id = intval($freights['data'][0]['line_id']);
+
+		$route_line_id_groups = $this->extract_route_line_id_groups($routes_res);
+		if (empty($route_line_id_groups)) {
+			wp_send_json_error(['message' => __('Shipping route not found.', 'bijak')]);
+		}
+
+		$selected_route_line_ids = array_values(
+			array_filter(
+				array_map('intval', $route_line_id_groups[0]),
+				static function ($id) {
+					return $id > 0;
+				}
+			)
+		);
+
+		if (empty($selected_route_line_ids)) {
+			wp_send_json_error(['message' => __('Shipping route not found.', 'bijak')]);
+		}
+
+		if (function_exists('WC') && WC()->session) {
+			WC()->session->set('bijak_route_line_ids', $selected_route_line_ids);
+		}
 
 		$goods_details = [];
 		if (function_exists('WC') && WC()->cart && ! WC()->cart->is_empty()) {
@@ -162,7 +237,7 @@ class Ajax
 						'location_latitude'  => 0,
 					],
 				],
-				'line_id' => $line_id,
+				'line_ids' => $selected_route_line_ids,
 			],
 		];
 

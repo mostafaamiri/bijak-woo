@@ -125,8 +125,8 @@ class Shipping_Method extends \WC_Shipping_Method
 		}
 
 		$api     = new Api();
-		$line_id = Helpers::resolve_line_id($api, $origin_city_id, $dest_city_id);
-		if (! $line_id) {
+		$line_ids = Helpers::resolve_line_ids($api, $origin_city_id, $dest_city_id);
+		if (empty($line_ids)) {
 			$this->add_rate([
 				'id'        => $this->get_rate_id(),
 				'label'     => $label . ' (' . __('No shipping route found', 'bijak') . ')',
@@ -189,7 +189,7 @@ class Shipping_Method extends \WC_Shipping_Method
 						'location_latitude'  => 0,
 					],
 				],
-				'line_id' => $line_id,
+				'line_ids' => $line_ids,
 			],
 		];
 

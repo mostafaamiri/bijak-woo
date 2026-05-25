@@ -162,7 +162,7 @@ class Admin
 		$selected = intval(Plugin::opt('origin_city_id', 0));
 
 		$api   = new Api();
-		$resp  = $api->request('/application/terminals/?type=origin');
+		$resp  = $api->request('/application/terminals?type=origin');
 		$cities = [];
 
 		if ( ! is_wp_error($resp) && ! empty($resp['data']) && is_array($resp['data']) ) {

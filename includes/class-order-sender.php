@@ -202,8 +202,8 @@ class Order_Sender {
 			return;
 		}
 
-		$line_id = Helpers::resolve_line_id( $this->api, $origin_city_id, $dest_city_id );
-		if ( ! $line_id ) {
+		$line_ids = Helpers::resolve_line_ids( $this->api, $origin_city_id, $dest_city_id );
+		if ( empty($line_ids) ) {
 			$order->add_order_note( __( 'Bijak: No freight line found for the selected route.', 'bijak' ) );
 			$this->set_order_error( $order, __( 'No freight line found.', 'bijak' ) );
 			return;
@@ -306,11 +306,6 @@ class Order_Sender {
 			'payment_info' => [
 				'is_cod'            => $is_cod,
 				'has_secure_payment'=> false,
-				'secure_payment'    => [
-					'account_number'        => '',
-					'account_name'          => '',
-					'secure_payment_amount' => 0,
-				],
 			],
 			'goods_info' => [
 				'goods_value'   => $goods_value,
@@ -327,7 +322,7 @@ class Order_Sender {
 					'is_door_delivery' => $is_door,
 					'src'              => $destination_src,
 				],
-				'line_id' => $line_id,
+				'line_ids' => $line_ids,
 			],
 		];
 
