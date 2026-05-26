@@ -8,7 +8,7 @@ Tested up to: 7.0
 Requires PHP: 7.4
 WC requires at least: 5.5
 WC tested up to: 10.7
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,11 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 
 == Changelog ==
 
+= 1.1.0 =
+* Added origin city selection in plugin settings and checkout flow improvements for destination handling
+* Updated Bijak API integrations to newer endpoints for order status retrieval and related requests
+* Fixed multiple checkout and shipping-rate refresh bugs for more reliable rate calculation
+
 = 1.0.1 =
 * Added WooCommerce HPOS compatibility declaration and order-meta handling through `WC_Order` APIs
 * Added support for HPOS order editor metabox
@@ -87,6 +92,9 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 * Shipment status display for users and admins
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+This release adds origin-city support, updates key Bijak API endpoints, and includes important bug fixes for checkout reliability.
 
 = 1.0.1 =
 Compatibility update for latest WooCommerce/WordPress while preserving backward support.

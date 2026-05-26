@@ -108,7 +108,7 @@ class Status_Display
 				return $wrap_open . $h_open . esc_html__('Waiting to be submitted to Bijak.', 'bijak') . $h_close . $wrap_close;
 			}
 
-			$res = $this->api->request('/application/order_data', 'POST', ['order_uuid' => $uuid]);
+			$res = $this->api->request('/application/orders/' . $uuid);
 
 			if (is_wp_error($res)) {
 				$msg = esc_html($res->get_error_message());
@@ -152,7 +152,7 @@ class Status_Display
 			return $html . $section_close;
 		}
 
-		$res = $this->api->request('/application/order_data', 'POST', ['order_uuid' => $uuid]);
+		$res = $this->api->request('/application/orders/' . $uuid);
 
 		if (is_wp_error($res)) {
 			$msg  = esc_html($res->get_error_message());

@@ -3,7 +3,7 @@
  * Plugin Name: Bijak
  * Plugin URI: https://wordpress.org/plugins/bijak/
  * Description: Smart freight shipping for WooCommerce via Bijak. Adds prepay/postpay shipping, live price estimates, and order submission to Bijak.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Requires Plugins: woocommerce
  * Author: بیجک
  * Author URI: https://bijak.ir
@@ -21,7 +21,7 @@ if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
-define('BIJAK_WOO_VER', '1.0.1');
+define('BIJAK_WOO_VER', '1.1.0');
 define('BIJAK_WOO_PATH', plugin_dir_path(__FILE__));
 define('BIJAK_WOO_URL',  plugin_dir_url(__FILE__));
 
