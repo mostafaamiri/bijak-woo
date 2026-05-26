@@ -71,6 +71,12 @@ class Checkout
 						checked>
 					<?php esc_html_e('Door-to-door delivery', 'bijak'); ?>
 				</label>
+				<small class="description">
+					<?php esc_html_e('If door-to-door delivery is unchecked, your shipment will be delivered to the destination city cargo terminal.', 'bijak'); ?>
+				</small><br>
+				<a href="https://bijak.ir/destination-guide/" target="_blank" rel="noopener">
+					<?php esc_html_e('Guide to destination city cargo terminals', 'bijak'); ?>
+				</a>
 			</p>
 
 			<div class="bijak-estimate">
@@ -89,6 +95,12 @@ class Checkout
 		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$dest = isset($_POST['bijak_dest_city']) ? sanitize_text_field(wp_unslash($_POST['bijak_dest_city'])) : '';
 		// phpcs:enable
+
+		// Checkout fragments can occasionally omit this custom field in final POST;
+		// fallback to the value persisted in WooCommerce session by AJAX estimate.
+		if ($dest === '' && function_exists('WC') && WC()->session) {
+			$dest = (string) WC()->session->get('bijak_dest_city_id', '');
+		}
 
 		if ($dest === '') {
 			wc_add_notice(__('Please select a destination city for Bijak shipping.', 'bijak'), 'error');
@@ -123,6 +135,28 @@ class Checkout
 					$order->update_meta_data('_' . $key, $val);
 				} else {
 					update_post_meta($order_id, '_' . $key, $val);
+				}
+			}
+		}
+
+		// Fallback: if checkout POST missed custom fields, persist session values.
+		if (function_exists('WC') && WC()->session) {
+			$session_dest = (string) WC()->session->get('bijak_dest_city_id', '');
+			$session_door = (string) WC()->session->get('bijak_is_door_delivery', '');
+
+			if ($session_dest !== '') {
+				if ($order instanceof \WC_Order) {
+					$order->update_meta_data('_bijak_dest_city', $session_dest);
+				} else {
+					update_post_meta($order_id, '_bijak_dest_city', $session_dest);
+				}
+			}
+
+			if ($session_door !== '') {
+				if ($order instanceof \WC_Order) {
+					$order->update_meta_data('_bijak_is_door_delivery', $session_door);
+				} else {
+					update_post_meta($order_id, '_bijak_is_door_delivery', $session_door);
 				}
 			}
 		}

@@ -160,7 +160,7 @@ jQuery(function ($) {
   $(document).on("change", "#bijak_dest_city", function () {
     window.__bijak_saved_city = $(this).val() || "";
     if (isBijakChosen() && $("#bijak_dest_city").val()) {
-      bijak_price_estimate(false);
+      bijak_price_estimate(true);
     }
   });
 
