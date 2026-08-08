@@ -81,6 +81,7 @@ class Admin
 		);
 
 		$this->add_text_field('origin_address', __('Origin address (detailed)', 'bijak'), '', 'textarea');
+		$this->add_text_field('map_picker_url', __('Location picker URL', 'bijak'), 'https://location.example.com/picker');
 
 		add_settings_field(
 			'origin_coords',
@@ -237,6 +238,11 @@ class Admin
 
 		if ( array_key_exists('origin_coords', $in) ) {
 			$out['origin_coords'] = sanitize_text_field($in['origin_coords'] ?? '');
+		}
+
+		if ( array_key_exists('map_picker_url', $in) ) {
+			$map_url = $in['map_picker_url'] ?? '';
+			$out['map_picker_url'] = is_scalar($map_url) ? esc_url_raw($map_url) : '';
 		}
 
 		if ( array_key_exists('self_delivery', $in) ) {

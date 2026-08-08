@@ -171,6 +171,32 @@ class Shipping_Method extends \WC_Shipping_Method
 			];
 		}
 
+		$destination_src = [
+			'location_longitude' => 0,
+			'location_latitude'  => 0,
+		];
+		if ($is_door) {
+			$lat = WC()->session ? WC()->session->get('bijak_destination_lat', '') : '';
+			$lng = WC()->session ? WC()->session->get('bijak_destination_lng', '') : '';
+			$location_city = WC()->session ? (int) WC()->session->get('bijak_destination_city_id', 0) : 0;
+			$lat = is_scalar($lat) && is_numeric($lat) && is_finite((float) $lat) && (float) $lat >= -90 && (float) $lat <= 90 ? (float) $lat : null;
+			$lng = is_scalar($lng) && is_numeric($lng) && is_finite((float) $lng) && (float) $lng >= -180 && (float) $lng <= 180 ? (float) $lng : null;
+			if (is_null($lat) || is_null($lng) || $location_city !== $dest_city_id) {
+				$this->add_rate([
+					'id' => $this->get_rate_id(),
+					'label' => $label . ' (' . __('Please select delivery location', 'bijak') . ')',
+					'cost' => 0,
+					'taxes' => false,
+					'meta_data' => ['bijak_mode' => 'prepay', 'bijak_note' => __('Destination location is required for door-to-door delivery.', 'bijak')],
+				]);
+				return;
+			}
+			$destination_src = [
+				'location_longitude' => $lng,
+				'location_latitude'  => $lat,
+			];
+		}
+
 		$body = [
 			'goods_info' => [
 				'goods_value'   => $goods_value,
@@ -184,10 +210,7 @@ class Shipping_Method extends \WC_Shipping_Method
 				],
 				'destination_info' => [
 					'is_door_delivery' => $is_door,
-					'src' => [
-						'location_longitude' => 0,
-						'location_latitude'  => 0,
-					],
+					'src' => $destination_src,
 				],
 				'line_ids' => $line_ids,
 			],

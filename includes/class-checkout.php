@@ -35,6 +35,14 @@ class Checkout
 		}
 		self::$printed = true;
 
+		$session = function_exists('WC') && WC() ? WC()->session : null;
+		$session_city = $session ? (int) $session->get('bijak_dest_city_id', 0) : 0;
+		$location_city = $session ? (int) $session->get('bijak_destination_city_id', 0) : 0;
+		$lat = $session ? $session->get('bijak_destination_lat', '') : '';
+		$lng = $session ? $session->get('bijak_destination_lng', '') : '';
+		$has_location = $this->valid_location($lat, $lng) && $session_city > 0 && $location_city === $session_city;
+		$address = $has_location && $session ? (string) $session->get('bijak_destination_address', '') : '';
+		$door_checked = !$session || (string) $session->get('bijak_is_door_delivery', '1') === '1';
 		?>
 		<div class="bijak-box" style="display:none;">
 			<h2 class="bijak-box__title"><?php esc_html_e('Shipping with Bijak', 'bijak'); ?></h2>
@@ -68,7 +76,7 @@ class Checkout
 						name="bijak_is_door_delivery"
 						value="1"
 						class="input-checkbox"
-						checked>
+						<?php checked($door_checked, true); ?>>
 					<?php esc_html_e('Door-to-door delivery', 'bijak'); ?>
 				</label>
 				<small class="description">
@@ -78,6 +86,19 @@ class Checkout
 					<?php esc_html_e('Guide to destination city cargo terminals', 'bijak'); ?>
 				</a>
 			</p>
+
+			<div class="bijak-location-picker" <?php echo $has_location ? 'data-location-selected="1"' : 'data-location-selected="0"'; ?>>
+				<button type="button" class="button bijak-location-picker__open">
+					<?php esc_html_e('Select delivery location on map', 'bijak'); ?>
+				</button>
+				<p class="bijak-location-picker__status" aria-live="polite">
+					<?php if ($has_location) : ?>
+						<strong><?php esc_html_e('Location selected', 'bijak'); ?></strong><?php echo $address !== '' ? ': ' . esc_html($address) : ''; ?>
+					<?php else : ?>
+						<?php esc_html_e('Location not selected', 'bijak'); ?>
+					<?php endif; ?>
+				</p>
+			</div>
 
 			<div class="bijak-estimate">
 				<div id="bijak_estimate_result" class="bijak-estimate__result"></div>
@@ -93,17 +114,43 @@ class Checkout
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$dest = isset($_POST['bijak_dest_city']) ? sanitize_text_field(wp_unslash($_POST['bijak_dest_city'])) : '';
+		$dest_raw = isset($_POST['bijak_dest_city']) ? wp_unslash($_POST['bijak_dest_city']) : '';
+		$dest = is_scalar($dest_raw) && $dest_raw !== '' ? absint($dest_raw) : 0;
 		// phpcs:enable
 
 		// Checkout fragments can occasionally omit this custom field in final POST;
 		// fallback to the value persisted in WooCommerce session by AJAX estimate.
-		if ($dest === '' && function_exists('WC') && WC()->session) {
-			$dest = (string) WC()->session->get('bijak_dest_city_id', '');
+		if (!$dest && function_exists('WC') && WC()->session) {
+			$dest = (int) WC()->session->get('bijak_dest_city_id', 0);
 		}
 
-		if ($dest === '') {
+		if ($dest > 0 && function_exists('WC') && WC()->session) {
+			$session_dest = (int) WC()->session->get('bijak_dest_city_id', 0);
+			if ($session_dest > 0 && $session_dest !== (int) $dest) {
+				foreach (['bijak_destination_lat', 'bijak_destination_lng', 'bijak_destination_address', 'bijak_destination_city_id', 'bijak_location_picker_state'] as $key) {
+					WC()->session->__unset($key);
+				}
+				WC()->session->set('bijak_dest_city_id', (int) $dest);
+			}
+		}
+
+		if (!$dest) {
 			wc_add_notice(__('Please select a destination city for Bijak shipping.', 'bijak'), 'error');
+		}
+
+		$door_raw = isset($_POST['bijak_is_door_delivery']) ? wp_unslash($_POST['bijak_is_door_delivery']) : '';
+		$door = is_scalar($door_raw) ? sanitize_text_field($door_raw) : '';
+		if ($door === '' && function_exists('WC') && WC()->session) {
+			$door = (string) WC()->session->get('bijak_is_door_delivery', '1');
+		}
+		if ($door === '1' && function_exists('WC') && WC()->session) {
+			$session = WC()->session;
+			$location_city = (int) $session->get('bijak_destination_city_id', 0);
+			$lat = $session->get('bijak_destination_lat', '');
+			$lng = $session->get('bijak_destination_lng', '');
+			if (!$this->valid_location($lat, $lng) || $location_city !== (int) $dest) {
+				wc_add_notice(__('Please select the delivery location on the map.', 'bijak'), 'error');
+			}
 		}
 
 		if (Plugin::opt('self_delivery', 'yes') !== 'yes') {
@@ -159,6 +206,26 @@ class Checkout
 					update_post_meta($order_id, '_bijak_is_door_delivery', $session_door);
 				}
 			}
+
+			$session_city = (int) WC()->session->get('bijak_dest_city_id', 0);
+			$location_city = (int) WC()->session->get('bijak_destination_city_id', 0);
+			$lat = WC()->session->get('bijak_destination_lat', '');
+			$lng = WC()->session->get('bijak_destination_lng', '');
+			if ($session_city > 0 && $location_city === $session_city && $this->valid_location($lat, $lng)) {
+				$location_meta = [
+					'_bijak_destination_lat' => (float) $lat,
+					'_bijak_destination_lng' => (float) $lng,
+					'_bijak_destination_address' => sanitize_textarea_field((string) WC()->session->get('bijak_destination_address', '')),
+					'_bijak_destination_city_id' => $location_city,
+				];
+				foreach ($location_meta as $key => $value) {
+					if ($order instanceof \WC_Order) {
+						$order->update_meta_data($key, $value);
+					} else {
+						update_post_meta($order_id, $key, $value);
+					}
+				}
+			}
 		}
 
 		if ($order instanceof \WC_Order) {
@@ -170,5 +237,15 @@ class Checkout
 				$legacy_order->add_order_note(__('Bijak: Shipping via Bijak.', 'bijak'));
 			}
 		}
+	}
+
+	private function valid_location($lat, $lng): bool
+	{
+		if (!is_scalar($lat) || !is_scalar($lng) || $lat === '' || $lng === '' || !is_numeric($lat) || !is_numeric($lng)) {
+			return false;
+		}
+		$lat = (float) $lat;
+		$lng = (float) $lng;
+		return is_finite($lat) && is_finite($lng) && $lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180;
 	}
 }

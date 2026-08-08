@@ -26,6 +26,149 @@ class Ajax
 
 		add_action('wp_ajax_bijak_price_estimate', [$this, 'price_estimate']);
 		add_action('wp_ajax_nopriv_bijak_price_estimate', [$this, 'price_estimate']);
+		add_action('wp_ajax_bijak_create_location_picker_session', [$this, 'create_location_picker_session']);
+		add_action('wp_ajax_nopriv_bijak_create_location_picker_session', [$this, 'create_location_picker_session']);
+		add_action('wp_ajax_bijak_save_destination_location', [$this, 'save_destination_location']);
+		add_action('wp_ajax_nopriv_bijak_save_destination_location', [$this, 'save_destination_location']);
+		add_action('wp_ajax_bijak_clear_destination_location', [$this, 'clear_destination_location']);
+		add_action('wp_ajax_nopriv_bijak_clear_destination_location', [$this, 'clear_destination_location']);
+	}
+
+	private function session(): ?object
+	{
+		return function_exists('WC') && WC() && WC()->session ? WC()->session : null;
+	}
+
+	private function clear_location(): void
+	{
+		$session = $this->session();
+		if (!$session) {
+			return;
+		}
+		foreach (['bijak_destination_lat', 'bijak_destination_lng', 'bijak_destination_address', 'bijak_destination_city_id', 'bijak_location_picker_state'] as $key) {
+			$session->__unset($key);
+		}
+	}
+
+	private function valid_coordinate($value, float $min, float $max): ?float
+	{
+		if (is_array($value) || is_object($value) || $value === '' || !is_scalar($value) || !is_numeric($value)) {
+			return null;
+		}
+		$number = (float) $value;
+		if (!is_finite($number) || $number < $min || $number > $max) {
+			return null;
+		}
+		return $number;
+	}
+
+	private function picker_origin(string $url): string
+	{
+		$parts = wp_parse_url($url);
+		if (empty($parts['scheme']) || empty($parts['host'])) {
+			return '';
+		}
+		$scheme = strtolower($parts['scheme']);
+		if (!in_array($scheme, ['http', 'https'], true)) {
+			return '';
+		}
+		$origin = $scheme . '://' . strtolower($parts['host']);
+		if (!empty($parts['port']) && !(($scheme === 'https' && (int) $parts['port'] === 443) || ($scheme === 'http' && (int) $parts['port'] === 80))) {
+			$origin .= ':' . (int) $parts['port'];
+		}
+		return $origin;
+	}
+
+	public function create_location_picker_session(): void
+	{
+		check_ajax_referer('bijak_nonce', 'nonce');
+		$session = $this->session();
+		if (!$session) {
+			wp_send_json_error(['message' => __('WooCommerce session is not available.', 'bijak')], 400);
+		}
+
+		$city_raw = isset($_POST['destination_city_id']) ? wp_unslash($_POST['destination_city_id']) : '';
+		$city_id = is_scalar($city_raw) && $city_raw !== '' ? absint($city_raw) : (int) $session->get('bijak_dest_city_id', 0);
+		$picker_value = Plugin::opt('map_picker_url', '');
+		$picker_url = is_scalar($picker_value) ? esc_url_raw((string) $picker_value) : '';
+		$origin = $this->picker_origin($picker_url);
+		if (!$city_id || !$picker_url || !$origin) {
+			wp_send_json_error(['message' => __('Select a destination city and configure a valid location picker URL.', 'bijak')], 400);
+		}
+		$previous_city = (int) $session->get('bijak_dest_city_id', 0);
+		if ($previous_city && $previous_city !== $city_id) {
+			$this->clear_location();
+		}
+		$session->set('bijak_dest_city_id', $city_id);
+
+		try {
+			$state = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+		} catch (\Throwable $e) {
+			wp_send_json_error(['message' => __('Unable to create a secure picker session.', 'bijak')], 500);
+		}
+
+		$session->set('bijak_location_picker_state', [
+			'state' => $state,
+			'created_at' => time(),
+			'destination_city_id' => $city_id,
+			'consumed' => false,
+		]);
+
+		$parent_origin = $this->picker_origin(home_url('/'));
+		$url = add_query_arg(['state' => $state, 'parent_origin' => $parent_origin, 'destination_city_id' => $city_id], $picker_url);
+		wp_send_json_success(['url' => esc_url_raw($url), 'state' => $state, 'origin' => $origin]);
+	}
+
+	public function save_destination_location(): void
+	{
+		check_ajax_referer('bijak_nonce', 'nonce');
+		$session = $this->session();
+		if (!$session) {
+			wp_send_json_error(['message' => __('WooCommerce session is not available.', 'bijak')], 400);
+		}
+
+		$pending = $session->get('bijak_location_picker_state', []);
+		$state_raw = isset($_POST['state']) ? wp_unslash($_POST['state']) : '';
+		$state = is_scalar($state_raw) ? sanitize_text_field($state_raw) : '';
+		if (!is_array($pending) || empty($pending['state']) || empty($state) || !hash_equals((string) $pending['state'], $state)) {
+			wp_send_json_error(['message' => __('This location picker session is invalid.', 'bijak')], 400);
+		}
+		if (!empty($pending['consumed']) || empty($pending['created_at']) || (time() - (int) $pending['created_at']) > 600) {
+			$session->__unset('bijak_location_picker_state');
+			wp_send_json_error(['message' => __('This location picker session has expired.', 'bijak')], 400);
+		}
+
+		$current_city = (int) $session->get('bijak_dest_city_id', 0);
+		if (!$current_city || $current_city !== (int) ($pending['destination_city_id'] ?? 0)) {
+			$this->clear_location();
+			wp_send_json_error(['message' => __('The destination city changed. Please select the location again.', 'bijak')], 400);
+		}
+
+		$lat = $this->valid_coordinate(isset($_POST['lat']) ? wp_unslash($_POST['lat']) : '', -90.0, 90.0);
+		$lng = $this->valid_coordinate(isset($_POST['lng']) ? wp_unslash($_POST['lng']) : '', -180.0, 180.0);
+		if (is_null($lat) || is_null($lng)) {
+			wp_send_json_error(['message' => __('The selected coordinates are invalid.', 'bijak')], 400);
+		}
+
+		$address = isset($_POST['address']) && is_scalar($_POST['address']) ? sanitize_textarea_field(wp_unslash($_POST['address'])) : '';
+		$address = function_exists('mb_substr') ? mb_substr($address, 0, 1000, 'UTF-8') : substr($address, 0, 1000);
+		$session->set('bijak_destination_lat', $lat);
+		$session->set('bijak_destination_lng', $lng);
+		$session->set('bijak_destination_address', $address);
+		$session->set('bijak_destination_city_id', $current_city);
+		$session->__unset('bijak_location_picker_state');
+
+		wp_send_json_success(['lat' => $lat, 'lng' => $lng, 'address' => $address, 'city_id' => $current_city]);
+	}
+
+	public function clear_destination_location(): void
+	{
+		check_ajax_referer('bijak_nonce', 'nonce');
+		if (!$this->session()) {
+			wp_send_json_error(['message' => __('WooCommerce session is not available.', 'bijak')], 400);
+		}
+		$this->clear_location();
+		wp_send_json_success();
 	}
 
 	public function get_profile(): void
@@ -111,12 +254,40 @@ class Ajax
 	{
 		check_ajax_referer('bijak_nonce', 'nonce');
 
-		$dest_city_id = isset($_POST['dest_city_id']) ? intval($_POST['dest_city_id']) : 0;
-		$is_door      = ! empty($_POST['is_door_delivery']);
+		$dest_raw = isset($_POST['dest_city_id']) ? wp_unslash($_POST['dest_city_id']) : '';
+		$dest_city_id = is_scalar($dest_raw) && $dest_raw !== '' ? absint($dest_raw) : 0;
+		$door_raw = isset($_POST['is_door_delivery']) ? wp_unslash($_POST['is_door_delivery']) : '';
+		$is_door = is_scalar($door_raw) && (string) $door_raw === '1';
 
-		if (function_exists('WC') && WC()->session) {
-			WC()->session->set('bijak_dest_city_id', $dest_city_id);
-			WC()->session->set('bijak_is_door_delivery', $is_door ? '1' : '0');
+		$session = $this->session();
+		if ($session) {
+			$previous_city = (int) $session->get('bijak_dest_city_id', 0);
+			if ($previous_city && $dest_city_id && $previous_city !== $dest_city_id) {
+				$this->clear_location();
+			}
+			$session->set('bijak_dest_city_id', $dest_city_id);
+			$session->set('bijak_is_door_delivery', $is_door ? '1' : '0');
+		}
+
+		if (!$dest_city_id) {
+			wp_send_json_error(['message' => __('Please select a destination city.', 'bijak')], 400);
+		}
+
+		$destination_src = [
+			'location_longitude' => 0,
+			'location_latitude' => 0,
+		];
+		if ($is_door) {
+			$lat = $session ? $this->valid_coordinate($session->get('bijak_destination_lat', ''), -90.0, 90.0) : null;
+			$lng = $session ? $this->valid_coordinate($session->get('bijak_destination_lng', ''), -180.0, 180.0) : null;
+			$location_city = $session ? (int) $session->get('bijak_destination_city_id', 0) : 0;
+			if (is_null($lat) || is_null($lng) || $location_city !== $dest_city_id) {
+				wp_send_json_error(['message' => __('Please select the delivery location on the map first.', 'bijak')], 400);
+			}
+			$destination_src = [
+				'location_longitude' => $lng,
+				'location_latitude' => $lat,
+			];
 		}
 
 		$set_session_cost = function (float $toman) {
@@ -232,10 +403,7 @@ class Ajax
 				],
 				'destination_info' => [
 					'is_door_delivery' => $is_door,
-					'src' => [
-						'location_longitude' => 0,
-						'location_latitude'  => 0,
-					],
+					'src' => $destination_src,
 				],
 				'line_ids' => $selected_route_line_ids,
 			],

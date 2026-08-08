@@ -281,12 +281,26 @@ class Order_Sender {
 			];
 		}
 
-		$destination_src = $is_door ? [
-			'location_longitude' => 0,
-			'location_latitude'  => 0,
-			'address'            => $address_concat,
-			'address_detail'     => '',
-		] : null;
+		$destination_src = null;
+		if ($is_door) {
+			$destination_lat = $this->get_order_meta($order, '_bijak_destination_lat', '');
+			$destination_lng = $this->get_order_meta($order, '_bijak_destination_lng', '');
+			$destination_city = (int) $this->get_order_meta($order, '_bijak_destination_city_id', 0);
+			$destination_lat = $this->valid_coordinate($destination_lat, -90.0, 90.0);
+			$destination_lng = $this->valid_coordinate($destination_lng, -180.0, 180.0);
+			if (is_null($destination_lat) || is_null($destination_lng) || $destination_city !== $dest_city_id) {
+				$order->add_order_note(__('Bijak: Door-to-door delivery requires a valid destination location.', 'bijak'));
+				$this->set_order_error($order, __('Destination coordinates are missing or invalid.', 'bijak'));
+				return;
+			}
+			$picker_address = sanitize_textarea_field((string) $this->get_order_meta($order, '_bijak_destination_address', ''));
+			$destination_src = [
+				'location_longitude' => $destination_lng,
+				'location_latitude'  => $destination_lat,
+				'address'            => $picker_address !== '' ? $picker_address : $address_concat,
+				'address_detail'     => '',
+			];
+		}
 
 		// postpay => is_cod=true | prepay => is_cod=false
 		$mode   = $this->get_bijak_mode( $order );
@@ -348,6 +362,14 @@ class Order_Sender {
 			$order->add_order_note( 'Bijak: ' . __( 'Invalid response.', 'bijak' ) . ' ' . wp_json_encode( $res, JSON_UNESCAPED_UNICODE ) );
 			$this->set_order_error( $order, __( 'Invalid response from Bijak.', 'bijak' ) );
 		}
+	}
+
+	private function valid_coordinate($value, float $min, float $max): ?float {
+		if (!is_scalar($value) || $value === '' || !is_numeric($value)) {
+			return null;
+		}
+		$number = (float) $value;
+		return is_finite($number) && $number >= $min && $number <= $max ? $number : null;
 	}
 
 	/**

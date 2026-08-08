@@ -37,6 +37,11 @@ class Refresh_Shipping
 		WC()->session->__unset('bijak_estimate_cost');
 		WC()->session->__unset('bijak_dest_city_id');
 		WC()->session->__unset('bijak_is_door_delivery');
+		WC()->session->__unset('bijak_destination_lat');
+		WC()->session->__unset('bijak_destination_lng');
+		WC()->session->__unset('bijak_destination_address');
+		WC()->session->__unset('bijak_destination_city_id');
+		WC()->session->__unset('bijak_location_picker_state');
 	}
 
 	public static function clear_session_on_entry()

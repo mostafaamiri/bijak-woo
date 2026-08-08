@@ -8,7 +8,7 @@ Tested up to: 7.0
 Requires PHP: 7.4
 WC requires at least: 5.5
 WC tested up to: 10.7
-Stable tag: 1.1.0
+Stable tag: 1.2.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,7 @@ It allows store owners to automatically calculate delivery costs, choose between
 * Supports both **Prepaid** and **Postpaid (Cash on Delivery)** modes
 * Fetches live shipping rates from the Bijak API
 * Supports **Door-to-door delivery** or **Pickup at freight terminal**
+* Provides secure map-based destination selection for door-to-door delivery
 * Automatically registers orders in Bijak after WooCommerce checkout
 * Displays shipment tracking status and code in both user and admin panels
 
@@ -71,8 +72,29 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 2. Shipping configuration in WooCommerce
 3. Checkout page with Bijak shipping method
 4. Order details with Bijak tracking code
+5. Secure map-based delivery location picker
 
 == Changelog ==
+
+= 1.2.5 =
+* Fixed loading of the bundled Persian translation catalogue.
+
+= 1.2.4 =
+* Load the bundled Persian translations for checkout and location-picker text.
+
+= 1.2.3 =
+* Fixed the location-picker loading state after the iframe has loaded.
+
+= 1.2.2 =
+* Fixed destination city option values so WooCommerce receives the selected Bijak city ID
+
+= 1.2.1 =
+* Fixed checkout fragment handling so the selected destination city and door-delivery state are read from the active Bijak checkout box
+
+= 1.2.0 =
+* Added a secure map-based destination picker for door-to-door delivery
+* Added session-backed destination coordinates to rate estimates, checkout validation, order metadata, and Bijak order submission
+* Added destination-location invalidation when the customer changes the destination city
 
 = 1.1.0 =
 * Added origin city selection in plugin settings and checkout flow improvements for destination handling
@@ -92,6 +114,24 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 * Shipment status display for users and admins
 
 == Upgrade Notice ==
+
+= 1.2.5 =
+Fixes loading the bundled Persian translations.
+
+= 1.2.4 =
+Loads the bundled Persian checkout translations.
+
+= 1.2.3 =
+Fixes the loading state after the map-picker iframe loads.
+
+= 1.2.2 =
+Fixes selecting a destination city before opening the map picker.
+
+= 1.2.1 =
+Fixes destination city handling after WooCommerce checkout fragments refresh.
+
+= 1.2.0 =
+Door-to-door delivery now requires a destination location selected through the configured map picker.
 
 = 1.1.0 =
 This release adds origin-city support, updates key Bijak API endpoints, and includes important bug fixes for checkout reliability.

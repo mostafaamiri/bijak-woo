@@ -53,14 +53,35 @@ class Assets
 		wp_localize_script(
 			'bijak-woo',
 			'BIJAK',
-			[
-				'ajax_url'       => admin_url('admin-ajax.php'),
-				'nonce'          => wp_create_nonce('bijak_nonce'),
-				'origin_city_id' => (int) Plugin::opt('origin_city_id', 0),
-			]
+				[
+					'ajax_url'       => admin_url('admin-ajax.php'),
+					'nonce'          => wp_create_nonce('bijak_nonce'),
+					'origin_city_id' => (int) Plugin::opt('origin_city_id', 0),
+					'saved_city_id' => (function_exists('WC') && WC() && WC()->session) ? (int) WC()->session->get('bijak_dest_city_id', 0) : 0,
+					'map_picker_url' => is_scalar(Plugin::opt('map_picker_url', '')) ? esc_url((string) Plugin::opt('map_picker_url', '')) : '',
+					'map_picker_origin' => is_scalar(Plugin::opt('map_picker_url', '')) ? $this->picker_origin((string) Plugin::opt('map_picker_url', '')) : '',
+				]
 		);
 
 		wp_enqueue_script('bijak-woo');
+	}
+
+	private function picker_origin($url): string
+	{
+		$parts = wp_parse_url((string) $url);
+		if (empty($parts['scheme']) || empty($parts['host'])) {
+			return '';
+		}
+
+		$scheme = strtolower($parts['scheme']);
+		if (!in_array($scheme, ['http', 'https'], true)) {
+			return '';
+		}
+		$origin = $scheme . '://' . strtolower($parts['host']);
+		if (!empty($parts['port']) && !(($scheme === 'https' && (int) $parts['port'] === 443) || ($scheme === 'http' && (int) $parts['port'] === 80))) {
+			$origin .= ':' . (int) $parts['port'];
+		}
+		return $origin;
 	}
 
 	/* ---------- Admin (Dashboard & Settings) ---------- */
