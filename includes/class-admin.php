@@ -10,6 +10,9 @@ class Admin
 {
 	public function register()
 	{
+		add_action('wp_ajax_bijak_admin_get_profile', [$this, 'ajax_get_profile']);
+		add_action('wp_ajax_bijak_admin_create_origin_picker_session', [$this, 'ajax_create_origin_picker_session']);
+		add_action('wp_ajax_bijak_admin_save_origin_location', [$this, 'ajax_save_origin_location']);
 		add_action('admin_init', [$this, 'register_settings']);
 		add_action('admin_menu', [$this, 'admin_menu']);
 		add_action('admin_notices', [$this, 'maybe_notice_api_key']);
@@ -86,13 +89,23 @@ class Admin
 			'origin_coords',
 			__('Origin coordinates (lat,lon)', 'bijak'),
 			function () {
-				$val = trim((string) Plugin::opt('origin_coords', ''));
-				printf(
-					'<input type="text" class="regular-text" name="%s[origin_coords]" value="%s" placeholder="35.6971,51.4041" style="direction:ltr" />',
-					esc_attr(Plugin::OPT),
-					esc_attr($val)
-				);
-				echo '<p class="description">' . esc_html__('Format: latitude,longitude (e.g. 35.6971,51.4041)', 'bijak') . '</p>';
+				[$lat, $lng] = $this->origin_coordinates();
+				$has_location = ! is_null($lat) && ! is_null($lng);
+				echo '<div class="bijak-origin-location">';
+				printf('<input type="hidden" id="bijak-origin-coords" name="%s[origin_coords]" value="%s" />', esc_attr(Plugin::OPT), esc_attr($has_location ? $lat . ',' . $lng : ''));
+				echo '<div class="bijak-origin-location__actions">';
+				echo '<button type="button" class="button button-secondary" id="bijak-origin-profile">' . esc_html__('Fill address from Bijak profile', 'bijak') . '</button>';
+				echo '<button type="button" class="button" id="bijak-origin-map">' . esc_html__('Choose origin on map', 'bijak') . '</button>';
+				echo '</div>';
+				echo '<p id="bijak-origin-coords-status" class="description ' . ($has_location ? 'is-set' : 'is-missing') . '">';
+				if ($has_location) {
+					printf('<a id="bijak-origin-map-link" href="%s" target="_blank" rel="noopener">%s</a>', esc_url(Config::neshan_map_url($lat, $lng)), esc_html__('View origin on Neshan map', 'bijak'));
+				} else {
+					echo esc_html__('Origin location is not set.', 'bijak');
+				}
+				echo '</p>';
+				echo '<input type="hidden" id="bijak-origin-location-source" name="' . esc_attr(Plugin::OPT) . '[origin_location_source]" value="" />';
+				echo '</div>';
 			},
 			Plugin::OPT,
 			'origin'
@@ -138,6 +151,65 @@ class Admin
 		);
 	}
 
+	private function origin_coordinates(): array
+	{
+		[$lat, $lng] = Helpers::parse_coords((string) Plugin::opt('origin_coords', ''));
+		if (is_null($lat) || is_null($lng) || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) return [null, null];
+		return [(float) $lat, (float) $lng];
+	}
+
+	private function ajax_guard(): void
+	{
+		check_ajax_referer('bijak_admin_nonce', 'nonce');
+		if (! current_user_can('manage_options')) wp_send_json_error(['message' => __('You are not allowed to manage Bijak settings.', 'bijak')], 403);
+	}
+
+	public function ajax_get_profile(): void
+	{
+		$this->ajax_guard();
+		$response = (new Api())->request('/application/profile');
+		if (is_wp_error($response) || empty($response['data']) || ! is_array($response['data'])) {
+			wp_send_json_error(['message' => __('Unable to read the Bijak profile.', 'bijak')], 502);
+		}
+		$data = $response['data'];
+		$lat = isset($data['lat']) && is_numeric($data['lat']) ? (float) $data['lat'] : null;
+		$lng = isset($data['lng']) && is_numeric($data['lng']) ? (float) $data['lng'] : null;
+		wp_send_json_success([
+			'address' => isset($data['address']) ? sanitize_textarea_field((string) $data['address']) : '',
+			'lat' => $lat, 'lng' => $lng,
+			'city_id' => isset($data['city_id']) ? absint($data['city_id']) : 0,
+		]);
+	}
+
+	public function ajax_create_origin_picker_session(): void
+	{
+		$this->ajax_guard();
+		$parent_origin = Config::origin_from_url(home_url('/'));
+		$picker_url = esc_url_raw(Config::MAP_PICKER_URL);
+		if (!$parent_origin || !$picker_url) wp_send_json_error(['message' => __('The location picker configuration is invalid.', 'bijak')], 400);
+		$authorization = (new Api())->request('/application/location-picker/authorize', 'POST', ['origin' => $parent_origin]);
+		if (is_wp_error($authorization) || empty($authorization['grant'])) wp_send_json_error(['message' => __('The Bijak API key is inactive or this domain is not authorized to use the location picker.', 'bijak')], 403);
+		try { $state = rtrim(strtr(base64_encode(random_bytes(Config::LOCATION_PICKER_STATE_BYTES)), '+/', '-_'), '='); } catch (\Throwable $e) { wp_send_json_error(['message' => __('Unable to create a secure picker session.', 'bijak')], 500); }
+		set_transient('bijak_origin_picker_' . get_current_user_id(), ['state' => $state, 'grant' => sanitize_text_field((string) $authorization['grant']), 'created_at' => time(), 'origin' => $parent_origin], Config::LOCATION_PICKER_STATE_TTL);
+		$url = add_query_arg(['state' => $state, 'parent_origin' => $parent_origin, 'picker_grant' => (string) $authorization['grant']], $picker_url);
+		wp_send_json_success(['url' => esc_url_raw($url), 'state' => $state, 'origin' => Config::map_picker_origin()]);
+	}
+
+	public function ajax_save_origin_location(): void
+	{
+		$this->ajax_guard();
+		$state = isset($_POST['state']) && is_scalar($_POST['state']) ? sanitize_text_field(wp_unslash($_POST['state'])) : '';
+		$pending = get_transient('bijak_origin_picker_' . get_current_user_id());
+		if (! is_array($pending) || empty($pending['state']) || !$state || ! hash_equals((string) $pending['state'], $state)) wp_send_json_error(['message' => __('This location picker session is invalid or expired.', 'bijak')], 400);
+		$lat = isset($_POST['lat']) && is_numeric($_POST['lat']) ? (float) wp_unslash($_POST['lat']) : null;
+		$lng = isset($_POST['lng']) && is_numeric($_POST['lng']) ? (float) wp_unslash($_POST['lng']) : null;
+		if (is_null($lat) || is_null($lng) || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) wp_send_json_error(['message' => __('The selected coordinates are invalid.', 'bijak')], 400);
+		$verify = (new Api())->request('/application/location-picker/verify', 'POST', ['grant' => (string) $pending['grant'], 'origin' => (string) $pending['origin']]);
+		if (is_wp_error($verify) || empty($verify['authorized'])) wp_send_json_error(['message' => __('The Bijak API key is inactive. Please try again.', 'bijak')], 403);
+		delete_transient('bijak_origin_picker_' . get_current_user_id());
+		wp_send_json_success(['coords' => $lat . ',' . $lng, 'lat' => $lat, 'lng' => $lng]);
+	}
+
 	/* ---------- Field helpers ---------- */
 
 	private function add_text_field($key, $label, $default = '', $type = 'text')
@@ -149,7 +221,8 @@ class Admin
 				$val = Plugin::opt($key, $default);
 				if ($type === 'textarea') {
 					printf(
-						'<textarea class="large-text" rows="3" name="%s[%s]">%s</textarea>',
+						'<textarea id="bijak-%s" class="large-text" rows="3" name="%s[%s]">%s</textarea>',
+							esc_attr(str_replace('_', '-', $key)),
 						esc_attr(Plugin::OPT),
 						esc_attr($key),
 						esc_textarea($val)
@@ -231,15 +304,18 @@ class Admin
 		}
 
 		$address_included = array_key_exists('origin_address', $in);
+		$location_source = isset($in['origin_location_source']) && is_scalar($in['origin_location_source']) ? sanitize_key($in['origin_location_source']) : '';
 		if ( $address_included ) {
 			$out['origin_address'] = sanitize_textarea_field($in['origin_address'] ?? '');
 		}
 
 		if ( array_key_exists('origin_coords', $in) ) {
-			$out['origin_coords'] = sanitize_text_field($in['origin_coords'] ?? '');
+			$raw_coords = is_scalar($in['origin_coords'] ?? null) ? sanitize_text_field($in['origin_coords']) : '';
+			[$lat, $lng] = Helpers::parse_coords($raw_coords);
+			$out['origin_coords'] = (! is_null($lat) && ! is_null($lng) && $lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180)
+				? ((float) $lat . ',' . (float) $lng)
+				: '';
 		}
-
-
 		// This endpoint is deployment configuration, not a merchant setting.
 		unset($out['map_picker_url']);
 
@@ -261,27 +337,14 @@ class Admin
 		}
 		$api_key = trim($out['api_key'] ?? '');
 
-		if ( $address_included && isset($out['origin_address']) && $out['origin_address'] === '' && $api_key !== '' ) {
-			$api = new Api();
-			$res = $api->request('/application/profile');
-			if ( ! is_wp_error($res) && ! empty($res['data']) ) {
-				$d = $res['data'];
-
-				if ( ! empty($d['address']) ) {
-					$out['origin_address'] = sanitize_textarea_field((string) $d['address']);
-				}
-
-				if ( isset($d['lat']) && isset($d['lng']) ) {
-					$lat = (float) $d['lat'];
-					$lng = (float) $d['lng'];
-					$out['origin_coords'] = sanitize_text_field($lat . ',' . $lng);
-				}
-
-				$cid = isset($d['city_id']) ? intval($d['city_id']) : 0;
-				if ( $cid > 0 ) {
-					$out['origin_city_id'] = $cid;
-				}
-			}
+		$address_changed = $address_included && trim((string) ($old['origin_address'] ?? '')) !== trim((string) ($out['origin_address'] ?? ''));
+		if ( $address_changed && $location_source !== 'profile' ) {
+			$out['origin_coords'] = '';
+			$out['origin_location_needs_selection'] = 1;
+		} elseif ($location_source === 'profile') {
+			$out['origin_location_needs_selection'] = empty($out['origin_coords']) ? 1 : 0;
+		} elseif (!empty($out['origin_coords'])) {
+			$out['origin_location_needs_selection'] = 0;
 		}
 
 		return $out;
@@ -351,24 +414,6 @@ class Admin
 				}
 				$new_arr['wallet_inventory'] = max(0, $wallet);
 
-				$address_is_empty_now =
-					empty($new_arr['origin_address']) &&
-					empty($old_arr['origin_address']);
-
-				if ( $address_is_empty_now ) {
-					if ( ! empty($d['address']) ) {
-						$new_arr['origin_address'] = sanitize_textarea_field((string) $d['address']);
-					}
-
-					if ( isset($d['lat']) && isset($d['lng']) ) {
-						$new_arr['origin_coords'] = sanitize_text_field(((float) $d['lat']) . ',' . ((float) $d['lng']));
-					}
-
-					$cid = isset($d['city_id']) ? intval($d['city_id']) : 0;
-					if ( $cid > 0 ) {
-						$new_arr['origin_city_id'] = $cid;
-					}
-				}
 			}
 		}
 
@@ -376,6 +421,8 @@ class Admin
 			unset($new_arr['supplier_full_name'], $new_arr['supplier_phone']);
 			$new_arr['wallet_inventory'] = 0;
 		}
+
+		unset($new_arr['origin_location_source']);
 
 		return $new_arr;
 	}
@@ -395,6 +442,9 @@ class Admin
 		}
 
 		echo '<div class="wrap"><h1>' . esc_html__('Bijak (Smart Freight)', 'bijak') . '</h1>';
+		if (Plugin::opt('origin_location_needs_selection', 0)) {
+			echo '<div class="notice notice-warning"><p>' . esc_html__('The origin address changed, so its coordinates were cleared. Choose the origin on the map and save the settings.', 'bijak') . '</p></div>';
+		}
 
 		if ( $profile['msg'] !== '' ) {
 			$cls = $profile['ok'] ? 'notice-info' : 'notice-error';
@@ -417,7 +467,7 @@ class Admin
 		echo '<span>&nbsp;&nbsp;</span>';
 		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">' . esc_html__('Create API key', 'bijak') . '</a>';
 		echo '</form>';
-		echo '<p class="bijak-muted">' . esc_html__('After saving, name/phone/wallet will be synced. If "Origin address" is empty, it will be filled from your Bijak profile on first sync.', 'bijak') . '</p>';
+		echo '<p class="bijak-muted">' . esc_html__('Name, phone and wallet are synced from Bijak. Use the profile button or map to set the origin address and location.', 'bijak') . '</p>';
 		echo '</div>';
 
 		if ( $api_key === '' ) {

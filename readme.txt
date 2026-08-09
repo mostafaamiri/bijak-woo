@@ -8,7 +8,7 @@ Tested up to: 7.0
 Requires PHP: 7.4
 WC requires at least: 5.5
 WC tested up to: 10.7
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -82,9 +82,16 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 
 == Changelog ==
 
+= 1.3.8 =
+* Added explicit admin controls to fill the origin from the Bijak profile or choose it securely on the map.
+* Made origin coordinates readonly and added a Neshan map link.
+* Clear origin coordinates when the origin address is changed manually.
+
 = 1.3.7 =
 * Added server-side Bijak API authorization for location-picker sessions.
 * Picker grants are short-lived and revalidated before saving coordinates; revoked API keys are rejected.
+* Added admin origin profile/map controls with readonly coordinates and Neshan map links.
+* Clear origin coordinates when the administrator changes the origin address manually.
 
 = 1.3.6 =
 * Show destination options as province followed by city.

@@ -758,3 +758,63 @@ msgstr "در حال ذخیره موقعیت انتخاب‌شده..."
 #: assets/js/checkout.js:223
 msgid "Unable to save location."
 msgstr "ذخیره موقعیت ممکن نیست."
+
+#: includes/class-admin.php
+msgid "Fill address from Bijak profile"
+msgstr "پر کردن آدرس از پروفایل بیجک"
+
+#: includes/class-admin.php
+msgid "Choose origin on map"
+msgstr "انتخاب مبدا روی نقشه"
+
+#: includes/class-admin.php
+msgid "View origin on Neshan map"
+msgstr "مشاهده مبدا در نقشه نشان"
+
+#: includes/class-admin.php
+msgid "Origin location is not set."
+msgstr "موقعیت مبدا ثبت نشده است."
+
+#: includes/class-admin.php
+msgid "You are not allowed to manage Bijak settings."
+msgstr "شما اجازه مدیریت تنظیمات بیجک را ندارید."
+
+#: includes/class-admin.php
+msgid "Unable to read the Bijak profile."
+msgstr "دریافت پروفایل بیجک ناموفق بود."
+
+#: includes/class-admin.php
+msgid "The location picker configuration is invalid."
+msgstr "پیکربندی انتخاب‌گر موقعیت نامعتبر است."
+
+#: includes/class-admin.php
+msgid "This location picker session is invalid or expired."
+msgstr "نشست انتخاب‌گر موقعیت نامعتبر یا منقضی شده است."
+
+#: includes/class-admin.php
+msgid "The Bijak API key is inactive. Please try again."
+msgstr "کلید API بیجک غیرفعال است. دوباره تلاش کنید."
+
+#: includes/class-admin.php
+msgid "The origin address changed, so its coordinates were cleared. Choose the origin on the map and save the settings."
+msgstr "آدرس مبدا تغییر کرد؛ بنابراین مختصات آن پاک شد. مبدا را روی نقشه انتخاب و تنظیمات را ذخیره کنید."
+
+#: includes/class-admin.php
+msgid "Name, phone and wallet are synced from Bijak. Use the profile button or map to set the origin address and location."
+msgstr "نام، تلفن و کیف پول از بیجک همگام می‌شوند. برای تنظیم آدرس و موقعیت مبدا از دکمه پروفایل یا نقشه استفاده کنید."
+
+#: includes/class-shipping-method.php
+msgid "Origin location required in Bijak settings"
+msgstr "تنظیم موقعیت مبدا در تنظیمات بیجک الزامی است"
+
+#: includes/class-shipping-method.php
+msgid "Origin address and location must be configured by an administrator."
+msgstr "آدرس و موقعیت مبدا باید توسط مدیر تنظیم شود."
+
+#: includes/class-order-sender.php
+msgid "Bijak: Origin address and location are not configured."
+msgstr "بیجک: آدرس و موقعیت مبدا تنظیم نشده است."
+
+#: includes/class-order-sender.php
+msgid "Origin location is required in Bijak settings."
+msgstr "تنظیم موقعیت مبدا در تنظیمات بیجک الزامی است."

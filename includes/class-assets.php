@@ -87,6 +87,19 @@ class Assets
 			return;
 		}
 
+		wp_enqueue_script(
+			'bijak-admin',
+			BIJAK_WOO_URL . 'assets/js/admin.js',
+			['jquery'],
+			BIJAK_WOO_VER,
+			true
+		);
+		wp_localize_script('bijak-admin', 'BIJAK_ADMIN', [
+			'ajax_url' => admin_url('admin-ajax.php'),
+			'nonce' => wp_create_nonce('bijak_admin_nonce'),
+			'picker_origin' => Config::map_picker_origin(),
+		]);
+
 		wp_register_style(
 			'bijak-woo-admin',
 			BIJAK_WOO_URL . 'assets/css/admin.css',

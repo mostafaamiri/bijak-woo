@@ -52,4 +52,12 @@ final class Config
 
 		return $origin;
 	}
+
+	public static function neshan_map_url(float $lat, float $lng, int $zoom = 16): string
+	{
+		return add_query_arg([
+			'lat' => rtrim(rtrim(number_format($lat, 7, '.', ''), '0'), '.'),
+			'lng' => rtrim(rtrim(number_format($lng, 7, '.', ''), '0'), '.'),
+		], 'https://nshn.ir/');
+	}
 }

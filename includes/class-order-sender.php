@@ -268,6 +268,11 @@ class Order_Sender {
 
 			$origin_address = trim( (string) Plugin::opt( 'origin_address', '' ) );
 			[ $lat, $lon ]  = Helpers::parse_coords( Plugin::opt( 'origin_coords', '' ) );
+			if ($origin_address === '' || is_null($lat) || is_null($lon) || $lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
+				$order->add_order_note( __( 'Bijak: Origin address and location are not configured.', 'bijak' ) );
+				$this->set_order_error( $order, __( 'Origin location is required in Bijak settings.', 'bijak' ) );
+				return;
+			}
 			$origin_src     = [
 				'location_longitude' => is_null( $lon ) ? 0 : $lon,
 				'location_latitude'  => is_null( $lat ) ? 0 : $lat,

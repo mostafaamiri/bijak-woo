@@ -162,6 +162,20 @@ class Shipping_Method extends \WC_Shipping_Method
 		}
 
 		$self_delivery = Plugin::opt('self_delivery', 'yes') === 'yes';
+		if (! $self_delivery) {
+			[$origin_lat, $origin_lng] = Helpers::parse_coords((string) Plugin::opt('origin_coords', ''));
+			$origin_address = trim((string) Plugin::opt('origin_address', ''));
+			if ($origin_address === '' || is_null($origin_lat) || is_null($origin_lng) || $origin_lat < -90 || $origin_lat > 90 || $origin_lng < -180 || $origin_lng > 180) {
+				$this->add_rate([
+					'id' => $this->get_rate_id(),
+					'label' => $label . ' (' . __('Origin location required in Bijak settings', 'bijak') . ')',
+					'cost' => 0,
+					'taxes' => false,
+					'meta_data' => ['bijak_mode' => 'prepay', 'bijak_note' => __('Origin address and location must be configured by an administrator.', 'bijak')],
+				]);
+				return;
+			}
+		}
 		$origin_src    = null;
 		if (! $self_delivery) {
 			[$lat, $lon] = Helpers::parse_coords(Plugin::opt('origin_coords', ''));
