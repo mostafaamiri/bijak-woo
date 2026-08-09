@@ -611,10 +611,6 @@ msgstr "راهنمای مراکز تخلیه بار شهرها"
 msgid "Order not found."
 msgstr ""
 
-#: includes/class-admin.php:84
-msgid "Location picker URL"
-msgstr "نشانی انتخاب‌گر موقعیت"
-
 #: includes/class-ajax.php:87
 #: includes/class-ajax.php:127
 #: includes/class-ajax.php:168
@@ -622,8 +618,12 @@ msgid "WooCommerce session is not available."
 msgstr "نشست ووکامرس در دسترس نیست."
 
 #: includes/class-ajax.php:96
-msgid "Select a destination city and configure a valid location picker URL."
-msgstr "یک شهر مقصد انتخاب کنید و نشانی معتبری برای انتخاب‌گر موقعیت تنظیم کنید."
+msgid "Select a destination city and ensure the location picker configuration is valid."
+msgstr "یک شهر مقصد انتخاب کنید و از معتبر بودن پیکربندی انتخاب‌گر موقعیت مطمئن شوید."
+
+#: includes/class-ajax.php
+msgid "The Bijak API key is inactive or this domain is not authorized to use the location picker."
+msgstr "کلید API بیجک غیرفعال است یا این دامنه مجوز استفاده از انتخاب‌گر موقعیت را ندارد."
 
 #: includes/class-ajax.php:107
 msgid "Unable to create a secure picker session."
@@ -640,6 +640,14 @@ msgstr "نشست انتخاب‌گر موقعیت منقضی شده است."
 #: includes/class-ajax.php:144
 msgid "The destination city changed. Please select the location again."
 msgstr "شهر مقصد تغییر کرده است. لطفا موقعیت را دوباره انتخاب کنید."
+
+#: includes/class-ajax.php
+msgid "The location picker authorization is missing."
+msgstr "مجوز انتخاب‌گر موقعیت وجود ندارد."
+
+#: includes/class-ajax.php
+msgid "The Bijak API key is inactive. Please refresh and try again."
+msgstr "کلید API بیجک غیرفعال است. صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
 
 #: includes/class-ajax.php:150
 msgid "The selected coordinates are invalid."
@@ -707,6 +715,10 @@ msgstr "انتخاب‌گر محل تحویل"
 #: assets/js/checkout.js:104
 msgid "Please select a destination city first."
 msgstr "لطفا ابتدا یک شهر مقصد انتخاب کنید."
+
+#: assets/js/checkout.js
+msgid "The selected checkout city is not available for Bijak. Please choose a Bijak destination city."
+msgstr "شهر انتخاب‌شده در تسویه‌حساب در فهرست بیجک نیست. لطفاً یک شهر مقصد بیجک انتخاب کنید."
 
 #: assets/js/checkout.js:105
 msgid "The location picker is not configured."

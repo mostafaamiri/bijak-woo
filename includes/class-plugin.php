@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require_once __DIR__ . '/class-helpers.php';
+require_once __DIR__ . '/class-config.php';
 require_once __DIR__ . '/class-admin.php';
 require_once __DIR__ . '/class-assets.php';
 require_once __DIR__ . '/class-api.php';

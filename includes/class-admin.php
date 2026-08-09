@@ -81,7 +81,6 @@ class Admin
 		);
 
 		$this->add_text_field('origin_address', __('Origin address (detailed)', 'bijak'), '', 'textarea');
-		$this->add_text_field('map_picker_url', __('Location picker URL', 'bijak'), 'https://location.example.com/picker');
 
 		add_settings_field(
 			'origin_coords',
@@ -240,10 +239,9 @@ class Admin
 			$out['origin_coords'] = sanitize_text_field($in['origin_coords'] ?? '');
 		}
 
-		if ( array_key_exists('map_picker_url', $in) ) {
-			$map_url = $in['map_picker_url'] ?? '';
-			$out['map_picker_url'] = is_scalar($map_url) ? esc_url_raw($map_url) : '';
-		}
+
+		// This endpoint is deployment configuration, not a merchant setting.
+		unset($out['map_picker_url']);
 
 		if ( array_key_exists('self_delivery', $in) ) {
 			$out['self_delivery'] = ( ! empty($in['self_delivery']) && $in['self_delivery'] === 'yes' ) ? 'yes' : 'no';
@@ -415,7 +413,7 @@ class Admin
 		);
 
 		submit_button(esc_html__('Save API Key', 'bijak'), 'primary', 'submit', false);
-		$api_url = 'https://my.bijak.ir/panel/organizational/apiKeys';
+		$api_url = Config::PANEL_API_KEYS_URL;
 		echo '<span>&nbsp;&nbsp;</span>';
 		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">' . esc_html__('Create API key', 'bijak') . '</a>';
 		echo '</form>';
@@ -447,7 +445,7 @@ class Admin
 		if ( $api_key === '' ) {
 			echo '<div class="bijak-badge bijak-inv">—</div>';
 		} else {
-			$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
+			$wallet_url = Config::PANEL_WALLET_URL;
 			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
 			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' ' . __('Toman', 'bijak')) . '</div>';
 			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up wallet', 'bijak') . '</a>';

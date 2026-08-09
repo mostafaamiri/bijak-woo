@@ -19,13 +19,27 @@ class Checkout
 
 	private function is_bijak_chosen(): bool
 	{
-		$chosen = '';
-		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if (isset($_POST['shipping_method'][0])) {
-			$chosen = sanitize_text_field(wp_unslash($_POST['shipping_method'][0]));
+		$raw_methods = isset($_POST['shipping_method']) ? wp_unslash($_POST['shipping_method']) : [];
+		$methods = is_array($raw_methods) ? $raw_methods : [$raw_methods];
+		foreach ($methods as $method) {
+			if (is_scalar($method) && strpos(sanitize_text_field((string) $method), 'bijak_pay_at_dest') === 0) {
+				return true;
+			}
 		}
-		// phpcs:enable
-		return ($chosen !== '') && strpos($chosen, 'bijak_pay_at_dest') === 0;
+
+		// Some checkout integrations omit shipping_method from the final POST.
+		// Use WooCommerce's chosen method only when the request contained no method.
+		if (empty($methods) && function_exists('WC') && WC()->session) {
+			$session_methods = WC()->session->get('chosen_shipping_methods', []);
+			$session_methods = is_array($session_methods) ? $session_methods : [$session_methods];
+			foreach ($session_methods as $method) {
+				if (is_scalar($method) && strpos(sanitize_text_field((string) $method), 'bijak_pay_at_dest') === 0) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	public function render_box(): void
@@ -41,7 +55,6 @@ class Checkout
 		$lat = $session ? $session->get('bijak_destination_lat', '') : '';
 		$lng = $session ? $session->get('bijak_destination_lng', '') : '';
 		$has_location = $this->valid_location($lat, $lng) && $session_city > 0 && $location_city === $session_city;
-		$address = $has_location && $session ? (string) $session->get('bijak_destination_address', '') : '';
 		$door_checked = !$session || (string) $session->get('bijak_is_door_delivery', '1') === '1';
 		?>
 		<div class="bijak-box" style="display:none;">
@@ -49,14 +62,14 @@ class Checkout
 
 			<p class="description">
 				<?php esc_html_e('Your order will be shipped via Bijak.', 'bijak'); ?><br>
-				<a href="https://bijak.ir" target="_blank" rel="noopener">
+				<a href="<?php echo esc_url(Config::WEBSITE_URL); ?>" target="_blank" rel="noopener">
 					<button type="button" class="button button-primary">
 						<?php esc_html_e('Visit Bijak Website', 'bijak'); ?>
 					</button>
 				</a>
 			</p>
 
-			<p class="form-row form-row-wide">
+			<div class="form-row form-row-wide">
 				<label for="bijak_dest_city">
 					<?php esc_html_e('Destination city', 'bijak'); ?> <abbr class="required">*</abbr>
 				</label>
@@ -66,7 +79,8 @@ class Checkout
 					data-placeholder="<?php esc_attr_e('— Select —', 'bijak'); ?>">
 					<option value=""></option>
 				</select>
-			</p>
+				<p class="bijak-destination-city-notice" role="alert" aria-live="assertive" style="display:none"></p>
+			</div>
 
 			<p class="form-row form-row-first">
 				<label for="bijak_is_door_delivery">
@@ -82,7 +96,7 @@ class Checkout
 				<small class="description">
 					<?php esc_html_e('If door-to-door delivery is unchecked, your shipment will be delivered to the destination city cargo terminal.', 'bijak'); ?>
 				</small><br>
-				<a href="https://bijak.ir/destination-guide/" target="_blank" rel="noopener">
+				<a href="<?php echo esc_url(Config::DESTINATION_GUIDE_URL); ?>" target="_blank" rel="noopener">
 					<?php esc_html_e('Guide to destination city cargo terminals', 'bijak'); ?>
 				</a>
 			</p>
@@ -93,7 +107,7 @@ class Checkout
 				</button>
 				<p class="bijak-location-picker__status" aria-live="polite">
 					<?php if ($has_location) : ?>
-						<strong><?php esc_html_e('Location selected', 'bijak'); ?></strong><?php echo $address !== '' ? ': ' . esc_html($address) : ''; ?>
+							<strong><?php esc_html_e('Location selected', 'bijak'); ?></strong>
 					<?php else : ?>
 						<?php esc_html_e('Location not selected', 'bijak'); ?>
 					<?php endif; ?>
@@ -114,13 +128,14 @@ class Checkout
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$dest_raw = isset($_POST['bijak_dest_city']) ? wp_unslash($_POST['bijak_dest_city']) : '';
+		$has_destination_field = array_key_exists('bijak_dest_city', $_POST);
+		$dest_raw = $has_destination_field ? wp_unslash($_POST['bijak_dest_city']) : '';
 		$dest = is_scalar($dest_raw) && $dest_raw !== '' ? absint($dest_raw) : 0;
 		// phpcs:enable
 
 		// Checkout fragments can occasionally omit this custom field in final POST;
-		// fallback to the value persisted in WooCommerce session by AJAX estimate.
-		if (!$dest && function_exists('WC') && WC()->session) {
+		// only then fallback to the value persisted in WooCommerce session by AJAX.
+		if (!$dest && !$has_destination_field && function_exists('WC') && WC()->session) {
 			$dest = (int) WC()->session->get('bijak_dest_city_id', 0);
 		}
 
@@ -139,11 +154,20 @@ class Checkout
 		}
 
 		$door_raw = isset($_POST['bijak_is_door_delivery']) ? wp_unslash($_POST['bijak_is_door_delivery']) : '';
-		$door = is_scalar($door_raw) ? sanitize_text_field($door_raw) : '';
+		$door_values = is_array($door_raw) ? $door_raw : [$door_raw];
+		$door = '';
+		foreach ($door_values as $door_value) {
+			if (is_scalar($door_value)) {
+				$door = sanitize_text_field((string) $door_value);
+				if ($door === '1') {
+					break;
+				}
+			}
+		}
 		if ($door === '' && function_exists('WC') && WC()->session) {
 			$door = (string) WC()->session->get('bijak_is_door_delivery', '1');
 		}
-		if ($door === '1' && function_exists('WC') && WC()->session) {
+		if ($door === '1' && $dest > 0 && function_exists('WC') && WC()->session) {
 			$session = WC()->session;
 			$location_city = (int) $session->get('bijak_destination_city_id', 0);
 			$lat = $session->get('bijak_destination_lat', '');
@@ -215,7 +239,6 @@ class Checkout
 				$location_meta = [
 					'_bijak_destination_lat' => (float) $lat,
 					'_bijak_destination_lng' => (float) $lng,
-					'_bijak_destination_address' => sanitize_textarea_field((string) WC()->session->get('bijak_destination_address', '')),
 					'_bijak_destination_city_id' => $location_city,
 				];
 				foreach ($location_meta as $key => $value) {

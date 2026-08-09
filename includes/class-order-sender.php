@@ -228,7 +228,6 @@ class Order_Sender {
 		$billing_a2  = trim( (string) $order->get_billing_address_2() );
 		$addr1       = $shipping_a1 !== '' ? $shipping_a1 : $billing_a1;
 		$addr2       = $shipping_a1 !== '' ? $shipping_a2 : $billing_a2;
-		$address_concat = trim( $addr1 . ( $addr2 !== '' ? ' - ' . $addr2 : '' ) );
 
 		$origin_src    = null;
 		$delivery_time = null;
@@ -293,12 +292,11 @@ class Order_Sender {
 				$this->set_order_error($order, __('Destination coordinates are missing or invalid.', 'bijak'));
 				return;
 			}
-			$picker_address = sanitize_textarea_field((string) $this->get_order_meta($order, '_bijak_destination_address', ''));
 			$destination_src = [
 				'location_longitude' => $destination_lng,
 				'location_latitude'  => $destination_lat,
-				'address'            => $picker_address !== '' ? $picker_address : $address_concat,
-				'address_detail'     => '',
+				'address'            => $addr1,
+				'address_detail'     => $addr2,
 			];
 		}
 

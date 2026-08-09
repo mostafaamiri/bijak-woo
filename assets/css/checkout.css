@@ -171,6 +171,12 @@
   width: 100%;
 }
 
+.bijak-destination-city-notice {
+  margin: 8px 0 0;
+  color: #b32d2e;
+  font-size: 13px;
+}
+
 .select2-container {
   width: 100% !important;
   max-width: 100%;

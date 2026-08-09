@@ -148,7 +148,7 @@ class Status_Display
 			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Waiting for submission to Bijak', 'bijak') . '</span></td></tr>';
 			$html .= $table_close;
 
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
 			return $html . $section_close;
 		}
 
@@ -160,7 +160,7 @@ class Status_Display
 			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Failed to fetch status', 'bijak') . '</span></td></tr>';
 			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Details', 'bijak') . '</th><td class="product-total"><span>' . $msg . '</span></td></tr>';
 			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
 			return $html . $section_close;
 		}
 
@@ -168,7 +168,7 @@ class Status_Display
 			$html = $section_open . $table_open;
 			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Invalid response from Bijak', 'bijak') . '</span></td></tr>';
 			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
 			return $html . $section_close;
 		}
 
@@ -218,7 +218,7 @@ class Status_Display
 
 		$html .= $table_close;
 
-		$html .= '<p><a class="button" href="' . esc_url('https://my.bijak.ir/panel/myOrders') . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+		$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
 
 		return $html . $section_close;
 	}

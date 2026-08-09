@@ -8,9 +8,6 @@ if (! defined('ABSPATH')) exit;
 
 class Api
 {
-	private const API_BASE = 'https://api.bijak.ir/';
-	private const TIMEOUT  = 15;
-
 	/**
 	 * Make a request to the Bijak API.
 	 *
@@ -21,7 +18,7 @@ class Api
 	 */
 	public function request($endpoint, $method = 'GET', $body = null)
 	{
-		$base = rtrim(self::API_BASE, '/');
+		$base = rtrim(Config::API_BASE, '/');
 		$url  = $base . $endpoint;
 
 		$headers = ['Content-Type' => 'application/json; charset=utf-8'];
@@ -33,7 +30,7 @@ class Api
 
 		$args = [
 			'method'  => $method,
-			'timeout' => self::TIMEOUT,
+			'timeout' => Config::API_TIMEOUT,
 			'headers' => $headers,
 		];
 

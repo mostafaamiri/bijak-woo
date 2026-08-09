@@ -43,8 +43,8 @@ class Dashboard
 		$full   = $has_key ? (string) $profile['full_name'] : '';
 		$phone  = $has_key ? (string) $profile['phone']     : '';
 
-		$wallet_url = 'https://my.bijak.ir/panel/profile/wallet';
-		$orders_url = 'https://my.bijak.ir/panel/myOrders';
+		$wallet_url = Config::PANEL_WALLET_URL;
+		$orders_url = Config::PANEL_ORDERS_URL;
 
 		echo '<div class="bijak-dash">';
 

@@ -62,23 +62,6 @@ class Ajax
 		return $number;
 	}
 
-	private function picker_origin(string $url): string
-	{
-		$parts = wp_parse_url($url);
-		if (empty($parts['scheme']) || empty($parts['host'])) {
-			return '';
-		}
-		$scheme = strtolower($parts['scheme']);
-		if (!in_array($scheme, ['http', 'https'], true)) {
-			return '';
-		}
-		$origin = $scheme . '://' . strtolower($parts['host']);
-		if (!empty($parts['port']) && !(($scheme === 'https' && (int) $parts['port'] === 443) || ($scheme === 'http' && (int) $parts['port'] === 80))) {
-			$origin .= ':' . (int) $parts['port'];
-		}
-		return $origin;
-	}
-
 	public function create_location_picker_session(): void
 	{
 		check_ajax_referer('bijak_nonce', 'nonce');
@@ -89,12 +72,28 @@ class Ajax
 
 		$city_raw = isset($_POST['destination_city_id']) ? wp_unslash($_POST['destination_city_id']) : '';
 		$city_id = is_scalar($city_raw) && $city_raw !== '' ? absint($city_raw) : (int) $session->get('bijak_dest_city_id', 0);
-		$picker_value = Plugin::opt('map_picker_url', '');
-		$picker_url = is_scalar($picker_value) ? esc_url_raw((string) $picker_value) : '';
-		$origin = $this->picker_origin($picker_url);
-		if (!$city_id || !$picker_url || !$origin) {
-			wp_send_json_error(['message' => __('Select a destination city and configure a valid location picker URL.', 'bijak')], 400);
+		$city_name_raw = isset($_POST['destination_city_name']) ? wp_unslash($_POST['destination_city_name']) : '';
+		$province_name_raw = isset($_POST['destination_province_name']) ? wp_unslash($_POST['destination_province_name']) : '';
+		$city_name = is_scalar($city_name_raw) ? sanitize_text_field($city_name_raw) : '';
+		$province_name = is_scalar($province_name_raw) ? sanitize_text_field($province_name_raw) : '';
+		$initial_lat = $this->valid_coordinate(isset($_POST['initial_lat']) ? wp_unslash($_POST['initial_lat']) : '', -90.0, 90.0);
+		$initial_lng = $this->valid_coordinate(isset($_POST['initial_lng']) ? wp_unslash($_POST['initial_lng']) : '', -180.0, 180.0);
+		$picker_url = esc_url_raw(Config::MAP_PICKER_URL);
+		$origin = Config::map_picker_origin();
+		$parent_origin = Config::origin_from_url(home_url('/'));
+		if (!$city_id || !$picker_url || !$origin || !$parent_origin) {
+			wp_send_json_error(['message' => __('Select a destination city and ensure the location picker configuration is valid.', 'bijak')], 400);
 		}
+
+		$authorization = $this->api->request('/application/location-picker/authorize', 'POST', [
+			'origin' => $parent_origin,
+		]);
+		if (is_wp_error($authorization) || empty($authorization['authorized']) || empty($authorization['grant'])) {
+			wp_send_json_error([
+				'message' => __('The Bijak API key is inactive or this domain is not authorized to use the location picker.', 'bijak'),
+			], 403);
+		}
+
 		$previous_city = (int) $session->get('bijak_dest_city_id', 0);
 		if ($previous_city && $previous_city !== $city_id) {
 			$this->clear_location();
@@ -102,20 +101,36 @@ class Ajax
 		$session->set('bijak_dest_city_id', $city_id);
 
 		try {
-			$state = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+			$state = rtrim(strtr(base64_encode(random_bytes(Config::LOCATION_PICKER_STATE_BYTES)), '+/', '-_'), '=');
 		} catch (\Throwable $e) {
 			wp_send_json_error(['message' => __('Unable to create a secure picker session.', 'bijak')], 500);
 		}
 
 		$session->set('bijak_location_picker_state', [
 			'state' => $state,
+			'grant' => sanitize_text_field((string) $authorization['grant']),
 			'created_at' => time(),
 			'destination_city_id' => $city_id,
 			'consumed' => false,
 		]);
 
-		$parent_origin = $this->picker_origin(home_url('/'));
-		$url = add_query_arg(['state' => $state, 'parent_origin' => $parent_origin, 'destination_city_id' => $city_id], $picker_url);
+		$query = [
+			'state' => $state,
+			'parent_origin' => $parent_origin,
+			'picker_grant' => (string) $authorization['grant'],
+			'destination_city_id' => $city_id,
+		];
+		if ($city_name !== '') {
+			$query['destination_city_name'] = $city_name;
+		}
+		if ($province_name !== '') {
+			$query['destination_province_name'] = $province_name;
+		}
+		if (!is_null($initial_lat) && !is_null($initial_lng)) {
+			$query['initial_lat'] = $initial_lat;
+			$query['initial_lng'] = $initial_lng;
+		}
+		$url = add_query_arg($query, $picker_url);
 		wp_send_json_success(['url' => esc_url_raw($url), 'state' => $state, 'origin' => $origin]);
 	}
 
@@ -133,7 +148,7 @@ class Ajax
 		if (!is_array($pending) || empty($pending['state']) || empty($state) || !hash_equals((string) $pending['state'], $state)) {
 			wp_send_json_error(['message' => __('This location picker session is invalid.', 'bijak')], 400);
 		}
-		if (!empty($pending['consumed']) || empty($pending['created_at']) || (time() - (int) $pending['created_at']) > 600) {
+		if (!empty($pending['consumed']) || empty($pending['created_at']) || (time() - (int) $pending['created_at']) > Config::LOCATION_PICKER_STATE_TTL) {
 			$session->__unset('bijak_location_picker_state');
 			wp_send_json_error(['message' => __('This location picker session has expired.', 'bijak')], 400);
 		}
@@ -144,30 +159,53 @@ class Ajax
 			wp_send_json_error(['message' => __('The destination city changed. Please select the location again.', 'bijak')], 400);
 		}
 
+		$parent_origin = Config::origin_from_url(home_url('/'));
+		$grant = is_scalar($pending['grant'] ?? null) ? (string) $pending['grant'] : '';
+		$authorization = $grant !== '' && $parent_origin !== ''
+			? $this->api->request('/application/location-picker/verify', 'POST', [
+				'grant' => $grant,
+				'origin' => $parent_origin,
+			])
+			: new \WP_Error('picker_authorization', __('The location picker authorization is missing.', 'bijak'));
+		if (is_wp_error($authorization) || empty($authorization['authorized'])) {
+			$session->__unset('bijak_location_picker_state');
+			wp_send_json_error([
+				'message' => __('The Bijak API key is inactive. Please refresh and try again.', 'bijak'),
+			], 403);
+		}
+
 		$lat = $this->valid_coordinate(isset($_POST['lat']) ? wp_unslash($_POST['lat']) : '', -90.0, 90.0);
 		$lng = $this->valid_coordinate(isset($_POST['lng']) ? wp_unslash($_POST['lng']) : '', -180.0, 180.0);
 		if (is_null($lat) || is_null($lng)) {
 			wp_send_json_error(['message' => __('The selected coordinates are invalid.', 'bijak')], 400);
 		}
 
-		$address = isset($_POST['address']) && is_scalar($_POST['address']) ? sanitize_textarea_field(wp_unslash($_POST['address'])) : '';
-		$address = function_exists('mb_substr') ? mb_substr($address, 0, 1000, 'UTF-8') : substr($address, 0, 1000);
 		$session->set('bijak_destination_lat', $lat);
 		$session->set('bijak_destination_lng', $lng);
-		$session->set('bijak_destination_address', $address);
 		$session->set('bijak_destination_city_id', $current_city);
 		$session->__unset('bijak_location_picker_state');
 
-		wp_send_json_success(['lat' => $lat, 'lng' => $lng, 'address' => $address, 'city_id' => $current_city]);
+		wp_send_json_success(['lat' => $lat, 'lng' => $lng, 'city_id' => $current_city]);
 	}
 
 	public function clear_destination_location(): void
 	{
 		check_ajax_referer('bijak_nonce', 'nonce');
-		if (!$this->session()) {
+		$session = $this->session();
+		if (!$session) {
 			wp_send_json_error(['message' => __('WooCommerce session is not available.', 'bijak')], 400);
 		}
 		$this->clear_location();
+		$clear_destination_raw = isset($_POST['clear_destination']) ? wp_unslash($_POST['clear_destination']) : '';
+		if (is_scalar($clear_destination_raw) && (string) $clear_destination_raw === '1') {
+			$session->__unset('bijak_dest_city_id');
+		} else {
+			$destination_city_raw = isset($_POST['destination_city_id']) ? wp_unslash($_POST['destination_city_id']) : '';
+			$destination_city_id = is_scalar($destination_city_raw) ? absint($destination_city_raw) : 0;
+			if ($destination_city_id > 0) {
+				$session->set('bijak_dest_city_id', $destination_city_id);
+			}
+		}
 		wp_send_json_success();
 	}
 
