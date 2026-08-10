@@ -58,64 +58,67 @@ class Checkout
 		$door_checked = !$session || (string) $session->get('bijak_is_door_delivery', '1') === '1';
 		?>
 		<div class="bijak-box" style="display:none;">
-			<h2 class="bijak-box__title"><?php esc_html_e('Shipping with Bijak', 'bijak'); ?></h2>
-
-			<p class="description">
-				<?php esc_html_e('Your order will be shipped via Bijak.', 'bijak'); ?><br>
-				<a href="<?php echo esc_url(Config::WEBSITE_URL); ?>" target="_blank" rel="noopener">
-					<button type="button" class="button button-primary">
-						<?php esc_html_e('Visit Bijak Website', 'bijak'); ?>
-					</button>
+			<div class="bijak-box__header">
+				<div>
+					<h2 class="bijak-box__title"><?php esc_html_e('Shipping with Bijak', 'bijak'); ?></h2>
+					<p class="bijak-box__intro"><?php esc_html_e('Your order will be shipped via Bijak.', 'bijak'); ?></p>
+				</div>
+				<a class="bijak-box__website" href="<?php echo esc_url(Config::WEBSITE_URL); ?>" target="_blank" rel="noopener">
+					<?php esc_html_e('Visit Bijak Website', 'bijak'); ?>
 				</a>
-			</p>
-
-			<div class="form-row form-row-wide">
-				<label for="bijak_dest_city">
-					<?php esc_html_e('Destination city', 'bijak'); ?> <abbr class="required">*</abbr>
-				</label>
-				<select id="bijak_dest_city"
-					name="bijak_dest_city"
-					class="input-select wc-enhanced-select address-field update_totals_on_change"
-					data-placeholder="<?php esc_attr_e('— Select —', 'bijak'); ?>">
-					<option value=""></option>
-				</select>
-				<p class="bijak-destination-city-notice" role="alert" aria-live="assertive" style="display:none"></p>
 			</div>
 
-			<p class="form-row form-row-first">
-				<label for="bijak_is_door_delivery">
-					<input type="hidden" name="bijak_is_door_delivery" value="0">
-					<input type="checkbox"
-						id="bijak_is_door_delivery"
-						name="bijak_is_door_delivery"
-						value="1"
-						class="input-checkbox"
-						<?php checked($door_checked, true); ?>>
-					<?php esc_html_e('Door-to-door delivery', 'bijak'); ?>
-				</label>
-				<small class="description">
-					<?php esc_html_e('If door-to-door delivery is unchecked, your shipment will be delivered to the destination city cargo terminal.', 'bijak'); ?>
-				</small><br>
-				<a href="<?php echo esc_url(Config::DESTINATION_GUIDE_URL); ?>" target="_blank" rel="noopener">
-					<?php esc_html_e('Guide to destination city cargo terminals', 'bijak'); ?>
-				</a>
-			</p>
+			<div class="bijak-box__content">
+				<div class="form-row form-row-wide bijak-destination-field">
+					<label for="bijak_dest_city">
+						<?php esc_html_e('Destination city', 'bijak'); ?> <abbr class="required">*</abbr>
+					</label>
+					<select id="bijak_dest_city"
+						name="bijak_dest_city"
+						class="input-select wc-enhanced-select address-field update_totals_on_change"
+						data-placeholder="<?php esc_attr_e('— Select —', 'bijak'); ?>">
+						<option value=""></option>
+					</select>
+					<p class="bijak-destination-city-notice" role="alert" aria-live="assertive" style="display:none"></p>
+				</div>
 
-			<div class="bijak-location-picker" <?php echo $has_location ? 'data-location-selected="1"' : 'data-location-selected="0"'; ?>>
-				<button type="button" class="button bijak-location-picker__open">
-					<?php esc_html_e('Select delivery location on map', 'bijak'); ?>
-				</button>
-				<p class="bijak-location-picker__status" aria-live="polite">
-					<?php if ($has_location) : ?>
-							<strong><?php esc_html_e('Location selected', 'bijak'); ?></strong>
-					<?php else : ?>
-						<?php esc_html_e('Location not selected', 'bijak'); ?>
-					<?php endif; ?>
-				</p>
-			</div>
+				<div class="bijak-delivery-mode">
+					<label class="bijak-delivery-mode__toggle" for="bijak_is_door_delivery">
+						<input type="hidden" name="bijak_is_door_delivery" value="0">
+						<input type="checkbox"
+							id="bijak_is_door_delivery"
+							name="bijak_is_door_delivery"
+							value="1"
+							class="input-checkbox"
+							<?php checked($door_checked, true); ?>>
+						<span><?php esc_html_e('Door-to-door delivery', 'bijak'); ?></span>
+					</label>
+					<div class="bijak-delivery-mode__details">
+						<p><?php esc_html_e('If door-to-door delivery is unchecked, your shipment will be delivered to the destination city cargo terminal.', 'bijak'); ?></p>
+						<a href="<?php echo esc_url(Config::DESTINATION_GUIDE_URL); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e('Guide to destination city cargo terminals', 'bijak'); ?>
+						</a>
+					</div>
+				</div>
 
-			<div class="bijak-estimate">
-				<div id="bijak_estimate_result" class="bijak-estimate__result"></div>
+				<div class="bijak-location-picker" <?php echo $has_location ? 'data-location-selected="1"' : 'data-location-selected="0"'; ?>>
+					<div>
+						<button type="button" class="button bijak-location-picker__open">
+							<?php esc_html_e('Select delivery location on map', 'bijak'); ?>
+						</button>
+						<p class="bijak-location-picker__status" aria-live="polite">
+							<?php if ($has_location) : ?>
+								<strong><?php esc_html_e('Location selected', 'bijak'); ?></strong>
+							<?php else : ?>
+								<?php esc_html_e('Location not selected', 'bijak'); ?>
+							<?php endif; ?>
+						</p>
+					</div>
+				</div>
+
+				<div class="bijak-estimate">
+					<div id="bijak_estimate_result" class="bijak-estimate__result" aria-live="polite"></div>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -127,15 +130,27 @@ class Checkout
 			return;
 		}
 
+		foreach (Helpers::cart_dimension_errors() as $dimension_error) {
+			// translators: %1$s is the product name, %2$s is a comma-separated list of missing dimensions.
+			wc_add_notice(
+				sprintf(
+					__('Bijak shipping dimensions are incomplete for "%1$s": %2$s.', 'bijak'),
+					$dimension_error['name'],
+					implode(', ', $dimension_error['missing'])
+				),
+				'error'
+			);
+		}
+
 		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$has_destination_field = array_key_exists('bijak_dest_city', $_POST);
 		$dest_raw = $has_destination_field ? wp_unslash($_POST['bijak_dest_city']) : '';
 		$dest = is_scalar($dest_raw) && $dest_raw !== '' ? absint($dest_raw) : 0;
 		// phpcs:enable
 
-		// Checkout fragments can occasionally omit this custom field in final POST;
-		// only then fallback to the value persisted in WooCommerce session by AJAX.
-		if (!$dest && !$has_destination_field && function_exists('WC') && WC()->session) {
+		// Some checkout templates submit this custom field as an empty value even
+		// though its selected value was already persisted by the price AJAX call.
+		if (!$dest && function_exists('WC') && WC()->session) {
 			$dest = (int) WC()->session->get('bijak_dest_city_id', 0);
 		}
 

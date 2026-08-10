@@ -37,6 +37,144 @@ class Helpers
 		return $f > 0 ? $f : 0;
 	}
 
+	/**
+	 * Convert a WooCommerce dimension value from the store unit to Bijak's cm.
+	 */
+	public static function dimension_to_bijak_cm($value): float
+	{
+		$value = self::min0($value);
+		if ($value <= 0) {
+			return 0;
+		}
+
+		$unit = strtolower((string) get_option('woocommerce_dimension_unit', 'cm'));
+		if (function_exists('wc_get_dimension')) {
+			return self::min0(wc_get_dimension($value, 'cm', $unit));
+		}
+
+		$multipliers = [
+			'mm' => 0.1,
+			'cm' => 1,
+			'm'  => 100,
+			'in' => 2.54,
+			'yd' => 91.44,
+		];
+		return self::min0($value * ($multipliers[$unit] ?? 1));
+	}
+
+	/**
+	 * Convert a WooCommerce weight value from the store unit to Bijak's kg.
+	 */
+	public static function weight_to_bijak_kg($value): float
+	{
+		$value = self::min0($value);
+		if ($value <= 0) {
+			return 0;
+		}
+
+		$unit = strtolower((string) get_option('woocommerce_weight_unit', 'kg'));
+		if (function_exists('wc_get_weight')) {
+			return self::min0(wc_get_weight($value, 'kg', $unit));
+		}
+
+		$multipliers = [
+			'g'    => 0.001,
+			'kg'   => 1,
+			'lbs'  => 0.453592,
+			'oz'   => 0.0283495,
+		];
+		return self::min0($value * ($multipliers[$unit] ?? 1));
+	}
+
+	/**
+	 * Resolve the dimensions sent to Bijak. Product-specific values take
+	 * precedence per field, with WooCommerce's standard values as fallback.
+	 */
+	public static function resolve_product_dimensions(\WC_Product $product): array
+	{
+		$fields = [
+			'length' => [Config::BIJAK_LENGTH_META, 'get_length', __('Length', 'bijak')],
+			'width'  => [Config::BIJAK_WIDTH_META, 'get_width', __('Width', 'bijak')],
+			'height' => [Config::BIJAK_HEIGHT_META, 'get_height', __('Height', 'bijak')],
+			'weight' => [Config::BIJAK_WEIGHT_META, 'get_weight', __('Weight', 'bijak')],
+		];
+
+		$dimensions = [];
+		$missing = [];
+		foreach ($fields as $key => [$meta_key, $getter, $label]) {
+			$value = self::min0($product->get_meta($meta_key, true));
+			if ($value <= 0) {
+				$value = self::min0($product->{$getter}());
+			}
+			$dimensions[$key] = 'weight' === $key
+				? self::weight_to_bijak_kg($value)
+				: self::dimension_to_bijak_cm($value);
+			if ($value <= 0) {
+				$missing[$key] = $label;
+			}
+		}
+
+		$dimensions['missing'] = $missing;
+		return $dimensions;
+	}
+
+	/**
+	 * Return human-readable dimension errors for the current cart.
+	 */
+	public static function cart_dimension_errors(): array
+	{
+		$errors = [];
+		if (! function_exists('WC') || ! WC()->cart || WC()->cart->is_empty()) {
+			return $errors;
+		}
+
+		foreach (WC()->cart->get_cart() as $item) {
+			$product = $item['data'] ?? null;
+			if (! $product instanceof \WC_Product) {
+				$errors[] = [
+					'name' => __('Unknown product', 'bijak'),
+					'missing' => [__('Product details', 'bijak')],
+				];
+				continue;
+			}
+
+			$resolved = self::resolve_product_dimensions($product);
+			if (! empty($resolved['missing'])) {
+				$errors[] = [
+					'name' => $product->get_name(),
+					'missing' => array_values($resolved['missing']),
+				];
+			}
+		}
+
+		return $errors;
+	}
+
+	public static function order_dimension_errors(\WC_Order $order): array
+	{
+		$errors = [];
+		foreach ($order->get_items() as $item) {
+			$product = $item->get_product();
+			if (! $product instanceof \WC_Product) {
+				$errors[] = [
+					'name' => $item->get_name(),
+					'missing' => [__('Product details', 'bijak')],
+				];
+				continue;
+			}
+
+			$resolved = self::resolve_product_dimensions($product);
+			if (! empty($resolved['missing'])) {
+				$errors[] = [
+					'name' => $item->get_name(),
+					'missing' => array_values($resolved['missing']),
+				];
+			}
+		}
+
+		return $errors;
+	}
+
 	public static function build_goods_details_from_cart(): array
 	{
 		$details = [];
@@ -45,15 +183,16 @@ class Helpers
 		if (function_exists('WC') && WC()->cart && ! WC()->cart->is_empty()) {
 			foreach (WC()->cart->get_cart() as $item) {
 				$p = isset($item['data']) ? $item['data'] : null;
-				if (! $p) {
+				if (! $p instanceof \WC_Product) {
 					$is_goods_have_problem = true;
 					continue;
 				}
 
-				$pr_length = self::min0($p->get_length());
-				$pr_width  = self::min0($p->get_width());
-				$pr_height = self::min0($p->get_height());
-				$pr_weight = self::min0($p->get_weight());
+				$dimensions = self::resolve_product_dimensions($p);
+				$pr_length = $dimensions['length'];
+				$pr_width  = $dimensions['width'];
+				$pr_height = $dimensions['height'];
+				$pr_weight = $dimensions['weight'];
 
 				if ($pr_length == 0 || $pr_width == 0 || $pr_height == 0 || $pr_weight == 0) {
 					$is_goods_have_problem = true;
@@ -86,15 +225,16 @@ class Helpers
 
 		foreach ($order->get_items() as $item) {
 			$product = $item->get_product();
-			if (! $product) {
+			if (! $product instanceof \WC_Product) {
 				$is_goods_have_problem = true;
 				continue;
 			}
 
-			$pr_length = self::min0($product->get_length());
-			$pr_width  = self::min0($product->get_width());
-			$pr_height = self::min0($product->get_height());
-			$pr_weight = self::min0($product->get_weight());
+			$dimensions = self::resolve_product_dimensions($product);
+			$pr_length = $dimensions['length'];
+			$pr_width  = $dimensions['width'];
+			$pr_height = $dimensions['height'];
+			$pr_weight = $dimensions['weight'];
 
 			if ($pr_length == 0 || $pr_width == 0 || $pr_height == 0 || $pr_weight == 0) {
 				$is_goods_have_problem = true;
@@ -226,6 +366,13 @@ class Helpers
 	{
 		$currency = function_exists('get_woocommerce_currency') ? get_woocommerce_currency() : 'IRT';
 		return (strtoupper($currency) === 'IRR') ? ($toman * 10.0) : $toman;
+	}
+
+	/** Convert store currency to Toman before sending monetary values to Bijak. */
+	public static function store_currency_to_toman(float $amount): float
+	{
+		$currency = function_exists('get_woocommerce_currency') ? get_woocommerce_currency() : 'IRT';
+		return (strtoupper($currency) === 'IRR') ? ($amount / 10.0) : $amount;
 	}
 
 	/**

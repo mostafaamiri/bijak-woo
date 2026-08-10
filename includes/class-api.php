@@ -9,6 +9,24 @@ if (! defined('ABSPATH')) exit;
 class Api
 {
 	/**
+	 * Make a GET request with a safely encoded query string.
+	 *
+	 * @return array|WP_Error
+	 */
+	public function get(string $endpoint, array $query = [])
+	{
+		$query = array_filter($query, static function ($value) {
+			return $value !== '' && $value !== null;
+		});
+
+		if (! empty($query)) {
+			$endpoint = add_query_arg($query, $endpoint);
+		}
+
+		return $this->request($endpoint);
+	}
+
+	/**
 	 * Make a request to the Bijak API.
 	 *
 	 * @param string $endpoint API endpoint (e.g. /application/profile)

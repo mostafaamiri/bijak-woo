@@ -18,10 +18,18 @@ final class Config
 	public const API_TIMEOUT = 15;
 
 	public const WEBSITE_URL = 'https://bijak.ir';
+	public const WEB_APP_URL = 'https://my.bijak.ir/';
 	public const DESTINATION_GUIDE_URL = 'https://bijak.ir/destination-guide/';
 	public const PANEL_API_KEYS_URL = 'https://my.bijak.ir/panel/organizational/apiKeys';
 	public const PANEL_WALLET_URL = 'https://my.bijak.ir/panel/profile/wallet';
 	public const PANEL_ORDERS_URL = 'https://my.bijak.ir/panel/myOrders';
+	public const PANEL_ORDER_DETAILS_URL = 'https://my.bijak.ir/panel/orderDetails/';
+	public const SHIPPING_METHOD_ID = 'bijak_pay_at_dest';
+	public const ORDERS_PER_PAGE = 10;
+	public const BIJAK_LENGTH_META = '_bijak_shipping_length';
+	public const BIJAK_WIDTH_META  = '_bijak_shipping_width';
+	public const BIJAK_HEIGHT_META = '_bijak_shipping_height';
+	public const BIJAK_WEIGHT_META = '_bijak_shipping_weight';
 
 	// Use the production picker URL in released builds. The local URL is for this test installation.
 	public const MAP_PICKER_URL = 'https://location-picker.bijak.ir/picker';

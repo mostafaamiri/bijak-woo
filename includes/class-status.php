@@ -28,6 +28,11 @@ class Status_Display
 
 	public function add_metabox($post_type = '', $post = null)
 	{
+		$order_id = $this->order_id_from_context($post, $post_type);
+		if ($order_id > 0 && ! $this->order_uses_bijak($order_id)) {
+			return;
+		}
+
 		$hpos_screen = function_exists('wc_get_page_screen_id')
 			? wc_get_page_screen_id('shop-order')
 			: 'woocommerce_page_wc-orders';
@@ -55,18 +60,13 @@ class Status_Display
 
 	public function render_admin_box($post)
 	{
-		if ($post instanceof \WC_Order) {
-			$order_id = (int) $post->get_id();
-		} elseif (is_numeric($post)) {
-			$order_id = (int) $post;
-		} elseif (is_object($post) && isset($post->ID)) {
-			$order_id = (int) $post->ID;
-		} else {
-			$order_id = 0;
-		}
+		$order_id = $this->order_id_from_context($post);
 
 		if ($order_id <= 0) {
 			echo wp_kses_post('<p>' . esc_html__('Order not found.', 'bijak') . '</p>');
+			return;
+		}
+		if (! $this->order_uses_bijak($order_id)) {
 			return;
 		}
 
@@ -94,32 +94,77 @@ class Status_Display
 		return $value === '' ? $default : $value;
 	}
 
+	private function order_id_from_context($primary, $fallback = null): int
+	{
+		foreach ([$primary, $fallback] as $candidate) {
+			if ($candidate instanceof \WC_Order) {
+				return (int) $candidate->get_id();
+			}
+			if (is_numeric($candidate)) {
+				return (int) $candidate;
+			}
+			if (is_object($candidate) && isset($candidate->ID)) {
+				return (int) $candidate->ID;
+			}
+		}
+
+		return 0;
+	}
+
+	private function order_uses_bijak(int $order_id): bool
+	{
+		$order = function_exists('wc_get_order') ? wc_get_order($order_id) : false;
+		if (! $order instanceof \WC_Order) {
+			return false;
+		}
+
+		foreach ($order->get_shipping_methods() as $shipping_method) {
+			if ($shipping_method->get_method_id() === Config::SHIPPING_METHOD_ID) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private function admin_view_link(string $uuid): string
+	{
+		$url = Config::PANEL_ORDER_DETAILS_URL . rawurlencode($uuid);
+		return '<a class="button button-primary bijak-admin-status__view" href="' . esc_url($url) . '" target="_blank" rel="noopener"><span class="dashicons dashicons-external" aria-hidden="true"></span> ' . esc_html__('View in Bijak', 'bijak') . '</a>';
+	}
+
+	private function front_view_url(string $uuid): string
+	{
+		return Config::PANEL_ORDER_DETAILS_URL . rawurlencode($uuid);
+	}
+
 	private function get_status_html(int $order_id, string $context = 'front'): string
 	{
+		if (! $this->order_uses_bijak($order_id)) {
+			return '';
+		}
+
 		$uuid = (string) $this->order_meta($order_id, '_bijak_order_uuid', '');
 
 		if ($context === 'admin') {
-			$wrap_open  = '<div class="inside" style="padding:8px 0;">';
+			$wrap_open  = '<div class="inside bijak-admin-status">';
 			$wrap_close = '</div>';
-			$h_open = '<strong>';
-			$h_close = '</strong>';
 
 			if (empty($uuid)) {
-				return $wrap_open . $h_open . esc_html__('Waiting to be submitted to Bijak.', 'bijak') . $h_close . $wrap_close;
+				return $wrap_open . '<div class="bijak-admin-status__empty"><span class="dashicons dashicons-clock" aria-hidden="true"></span><strong>' . esc_html__('Waiting to be submitted to Bijak.', 'bijak') . '</strong></div>' . $wrap_close;
 			}
 
 			$res = $this->api->request('/application/orders/' . $uuid);
 
 			if (is_wp_error($res)) {
 				$msg = esc_html($res->get_error_message());
-				$html  = $wrap_open . $h_open . esc_html__('Failed to fetch status from Bijak', 'bijak') . $h_close . '<br/>';
-				$html .= esc_html__('Details:', 'bijak') . ' ' . $msg . '<br/>';
-				$html .= '<small>UUID: <code style="direction:ltr">' . esc_html($uuid) . '</code></small>';
+				$html  = $wrap_open . '<div class="bijak-admin-status__notice is-error"><span class="dashicons dashicons-warning" aria-hidden="true"></span><strong>' . esc_html__('Failed to fetch status from Bijak', 'bijak') . '</strong><p>' . esc_html__('Details:', 'bijak') . ' ' . $msg . '</p></div>';
+				$html .= '<div class="bijak-admin-status__uuid"><span>UUID</span><code dir="ltr">' . esc_html($uuid) . '</code></div>' . $this->admin_view_link($uuid);
 				return $html . $wrap_close;
 			}
 			if (empty($res['success'])) {
-				$html  = $wrap_open . $h_open . esc_html__('Invalid response from Bijak.', 'bijak') . $h_close . '<br/>';
-				$html .= '<small>UUID: <code style="direction:ltr">' . esc_html($uuid) . '</code></small>';
+				$html  = $wrap_open . '<div class="bijak-admin-status__notice is-error"><span class="dashicons dashicons-warning" aria-hidden="true"></span><strong>' . esc_html__('Invalid response from Bijak.', 'bijak') . '</strong></div>';
+				$html .= '<div class="bijak-admin-status__uuid"><span>UUID</span><code dir="ltr">' . esc_html($uuid) . '</code></div>' . $this->admin_view_link($uuid);
 				return $html . $wrap_close;
 			}
 
@@ -127,48 +172,43 @@ class Status_Display
 			$tracking_num   = $res['tracking_number']    ?? null;
 			$dest_city_name = $res['demand_info']['destination_city']['city_name'] ?? '';
 
-			$html  = $wrap_open;
-			$html .= '<div><span>' . $h_open . esc_html__('Status: ', 'bijak') . $h_close . '</span>' . esc_html($status_title ?: esc_html__('Unknown', 'bijak')) . '</div>';
-			$html .= '<div><span>' . $h_open . esc_html__('Destination: ', 'bijak') . $h_close . '</span>' . esc_html($dest_city_name ?: '—') . '</div>';
-			$html .= '<div><span>' . $h_open . esc_html__('Bijak Tracking Code: ', 'bijak') . $h_close . '</span>';
-			$html .= $tracking_num ? '<code style="direction:ltr">' . esc_html((string) $tracking_num) . '</code>' : esc_html__('Not issued yet', 'bijak');
-			$html .= '</div>';
-			$html .= '<div><small>UUID: <code style="direction:ltr">' . esc_html($uuid) . '</code></small></div>';
+			$html  = $wrap_open . '<div class="bijak-admin-status__rows">';
+			$html .= '<div class="bijak-admin-status__row"><span>' . esc_html__('Status: ', 'bijak') . '</span><strong>' . esc_html($status_title ?: esc_html__('Unknown', 'bijak')) . '</strong></div>';
+			$html .= '<div class="bijak-admin-status__row"><span>' . esc_html__('Destination: ', 'bijak') . '</span><strong>' . esc_html($dest_city_name ?: '—') . '</strong></div>';
+			$html .= '<div class="bijak-admin-status__row"><span>' . esc_html__('Bijak Tracking Code: ', 'bijak') . '</span>';
+			$html .= $tracking_num ? '<code dir="ltr">' . esc_html((string) $tracking_num) . '</code>' : '<strong>' . esc_html__('Not issued yet', 'bijak') . '</strong>';
+			$html .= '</div></div>';
+			$html .= '<div class="bijak-admin-status__uuid"><span>UUID</span><code dir="ltr">' . esc_html($uuid) . '</code></div>';
+			$html .= $this->admin_view_link($uuid);
 			return $html . $wrap_close;
 		}
 
-		$section_open  = '<section class="woocommerce-order-details" style="margin-top:18px">';
-		$section_open .= '<h2 class="woocommerce-order-details__title">' . esc_html__('Bijak Shipping Status', 'bijak') . '</h2>';
-		$table_open    = '<div class="responsive-table"><table class="woocommerce-table woocommerce-table--order-details shop_table order_details"><tbody>';
-		$table_close   = '</tbody></table></div>';
-		$section_close = '</section>';
+		$section_open  = '<section class="woocommerce-order-details bijak-front-status" style="margin-top:18px">';
+		$section_open .= '<div class="bijak-front-status__header"><h2 class="woocommerce-order-details__title">' . esc_html__('Bijak Shipping Status', 'bijak') . '</h2></div>';
+		$section_open .= '<div class="bijak-front-status__body">';
+		$section_close = '</div></section>';
 
 		if (empty($uuid)) {
-			$html  = $section_open . $table_open;
-			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Waiting for submission to Bijak', 'bijak') . '</span></td></tr>';
-			$html .= $table_close;
-
-			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html  = $section_open . '<div class="bijak-front-status__empty"><span>' . esc_html__('Status', 'bijak') . '</span><strong>' . esc_html__('Waiting for submission to Bijak', 'bijak') . '</strong></div>';
 			return $html . $section_close;
 		}
+
+		$view_url = $this->front_view_url($uuid);
 
 		$res = $this->api->request('/application/orders/' . $uuid);
 
 		if (is_wp_error($res)) {
 			$msg  = esc_html($res->get_error_message());
-			$html = $section_open . $table_open;
-			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Failed to fetch status', 'bijak') . '</span></td></tr>';
-			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Details', 'bijak') . '</th><td class="product-total"><span>' . $msg . '</span></td></tr>';
-			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html = $section_open . '<div class="bijak-front-status__grid">';
+			$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Status', 'bijak') . '</span><strong>' . esc_html__('Failed to fetch status', 'bijak') . '</strong></div>';
+			$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Details', 'bijak') . '</span><strong>' . $msg . '</strong></div></div>';
+			$html .= '<div class="bijak-front-status__actions"><a class="button" href="' . esc_url($view_url) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></div>';
 			return $html . $section_close;
 		}
 
 		if (empty($res['success'])) {
-			$html = $section_open . $table_open;
-			$html .= '<tr><th scope="row" class="product-name">' . esc_html__('Status', 'bijak') . '</th><td class="product-total"><span>' . esc_html__('Invalid response from Bijak', 'bijak') . '</span></td></tr>';
-			$html .= $table_close;
-			$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			$html = $section_open . '<div class="bijak-front-status__grid"><div class="bijak-front-status__row"><span>' . esc_html__('Status', 'bijak') . '</span><strong>' . esc_html__('Invalid response from Bijak', 'bijak') . '</strong></div></div>';
+			$html .= '<div class="bijak-front-status__actions"><a class="button" href="' . esc_url($view_url) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></div>';
 			return $html . $section_close;
 		}
 
@@ -186,39 +226,17 @@ class Status_Display
 				esc_html($dest_city_name ?: '')
 			);
 
-		$html  = $section_open . $table_open;
-
-		$html .= '<tr class="woocommerce-table__line-item order_item">';
-		$html .= '<th scope="row" class="woocommerce-table__product-name product-name">' . esc_html__('Status', 'bijak') . '</th>';
-		$html .= '<td class="woocommerce-table__product-total product-total"><span>' . esc_html($status_title ?: esc_html__('Unknown', 'bijak')) . '</span></td>';
-		$html .= '</tr>';
-
-		$html .= '<tr class="woocommerce-table__line-item order_item">';
-		$html .= '<th scope="row" class="woocommerce-table__product-name product-name">' . esc_html__('Destination', 'bijak') . '</th>';
-		$html .= '<td class="woocommerce-table__product-total product-total"><span>' . esc_html($dest_city_name ?: '—') . '</span></td>';
-		$html .= '</tr>';
-
-		$html .= '<tr class="woocommerce-table__line-item order_item">';
-		$html .= '<th scope="row" class="woocommerce-table__product-name product-name">' . esc_html__('Delivery place', 'bijak') . '</th>';
-		$html .= '<td class="woocommerce-table__product-total product-total"><span>' . $place_label . '</span></td>';
-		$html .= '</tr>';
-
-		$html .= '<tr class="woocommerce-table__line-item order_item">';
-		$html .= '<th scope="row" class="woocommerce-table__product-name product-name">' . esc_html__('Shipping cost', 'bijak') . '</th>';
-		$html .= '<td class="woocommerce-table__product-total product-total"><span>' . esc_html(number_format_i18n((float) $order_sum)) . ' ' . esc_html__('Toman', 'bijak') . '</span></td>';
-		$html .= '</tr>';
-
-		$html .= '<tr class="woocommerce-table__line-item order_item">';
-		$html .= '<th scope="row" class="woocommerce-table__product-name product-name">' . esc_html__('Bijak tracking code', 'bijak') . '</th>';
-		$html .= '<td class="woocommerce-table__product-total product-total">';
+		$html  = $section_open . '<div class="bijak-front-status__grid">';
+		$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Status', 'bijak') . '</span><strong>' . esc_html($status_title ?: __('Unknown', 'bijak')) . '</strong></div>';
+		$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Destination', 'bijak') . '</span><strong>' . esc_html($dest_city_name ?: '—') . '</strong></div>';
+		$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Delivery place', 'bijak') . '</span><strong>' . $place_label . '</strong></div>';
+		$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Shipping cost', 'bijak') . '</span><strong>' . esc_html(number_format_i18n((float) $order_sum)) . ' ' . esc_html__('Toman', 'bijak') . '</strong></div>';
+		$html .= '<div class="bijak-front-status__row"><span>' . esc_html__('Bijak tracking code', 'bijak') . '</span><strong>';
 		$html .= $tracking_num
 			? '<span class="bijak-code" style="direction:ltr;display:inline-block">' . esc_html((string) $tracking_num) . '</span>'
-			: '<span>' . esc_html__('Not issued yet', 'bijak') . '</span>';
-		$html .= '</td></tr>';
-
-		$html .= $table_close;
-
-		$html .= '<p><a class="button" href="' . esc_url(Config::PANEL_ORDERS_URL) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></p>';
+			: esc_html__('Not issued yet', 'bijak');
+		$html .= '</strong></div></div>';
+		$html .= '<div class="bijak-front-status__actions"><a class="button" href="' . esc_url($view_url) . '" target="_blank" rel="noopener">' . esc_html__('View in Bijak', 'bijak') . '</a></div>';
 
 		return $html . $section_close;
 	}

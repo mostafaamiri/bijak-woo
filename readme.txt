@@ -8,7 +8,7 @@ Tested up to: 7.0
 Requires PHP: 7.4
 WC requires at least: 5.5
 WC tested up to: 10.7
-Stable tag: 1.3.8
+Stable tag: 1.3.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,7 @@ It allows store owners to automatically calculate delivery costs, choose between
 * Fetches live shipping rates from the Bijak API
 * Supports **Door-to-door delivery** or **Pickup at freight terminal**
 * Provides secure map-based destination selection for door-to-door delivery
+* Supports optional Bijak-specific product and variation shipping dimensions with WooCommerce fallback
 * Automatically registers orders in Bijak after WooCommerce checkout
 * Displays shipment tracking status and code in both user and admin panels
 
@@ -81,6 +82,59 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 5. Secure map-based delivery location picker
 
 == Changelog ==
+
+= 1.3.23 =
+* Convert store values in Iranian Rial to Toman before sending goods values to Bijak.
+
+= 1.3.22 =
+* Convert WooCommerce product dimensions and weights to Bijak's cm/kg units before rate estimates and order submission.
+
+= 1.3.21 =
+* Hide Bijak shipment-status panels for orders that use another shipping method.
+
+= 1.3.20 =
+* Improved the Bijak shipment-status panel on the customer view-order page.
+
+= 1.3.19 =
+* Redesigned the Bijak shipment-status panel on the order-received page.
+* Corrected the front-end Bijak button to open the corresponding shipment details page.
+
+= 1.3.18 =
+* Redesigned the Bijak checkout panel for clearer destination, delivery, location, and price-estimate controls.
+
+= 1.3.17 =
+* Added optional Bijak shipping dimensions for products and variations.
+* Bijak shipping now uses product-specific dimensions first, then falls back to WooCommerce values.
+* Added clear validation errors when length, width, height, or weight is missing.
+
+= 1.3.16 =
+* Added a "Shipping with Bijak" filter to both legacy and HPOS WooCommerce order lists.
+
+= 1.3.15 =
+* Redesigned the Bijak shipping-status panel in the WooCommerce order editor.
+* Added a direct link from each submitted WooCommerce order to its Bijak order details page.
+
+= 1.3.14 =
+* Renamed the default order-state filter label and corrected the filter icon position for RTL layouts.
+
+= 1.3.13 =
+* Fixed the order filter button icon contrast and RTL icon placement.
+
+= 1.3.12 =
+* Added a dashboard reminder linking administrators to Bijak Setup & Settings for API key and shipping-origin checks.
+* Refined the shipping-origin settings layout with clearer grouping, controls, status styling, and responsive mobile behavior.
+
+= 1.3.11 =
+* Added a redesigned Bijak dashboard with account, wallet, and filtered order data from the Bijak API.
+* Added compact RTL order pagination, total-order calculation, copyable tracking numbers, and direct links to order details.
+* Improved the WordPress dashboard widget and added direct access to the in-plugin Bijak dashboard.
+* Added a web-app shortcut for viewing, payments, and other Bijak account activities.
+* Improved checkout destination validation without relying on third-party Persian WooCommerce localization plugins.
+* Made map location confirmation save coordinates immediately without reverse-geocoding delays.
+
+= 1.3.10 =
+* Added the bundled Persian Jalali date picker for order date filters in the Bijak dashboard.
+* Improved the Bijak admin setup screens and origin location picker experience.
 
 = 1.3.8 =
 * Added explicit admin controls to fill the origin from the Bijak profile or choose it securely on the map.
@@ -160,6 +214,27 @@ This plugin connects to the **Bijak Smart Freight API** to calculate shipping ra
 * Shipment status display for users and admins
 
 == Upgrade Notice ==
+
+= 1.3.16 =
+Adds a direct shipping-method filter for Bijak orders in the WooCommerce orders list.
+
+= 1.3.15 =
+Adds a clearer Bijak status panel and direct order-details link in WooCommerce order editing.
+
+= 1.3.14 =
+Improves the order filter label and RTL button icon placement.
+
+= 1.3.13 =
+Fixes the filter button icon visibility in the Bijak order dashboard.
+
+= 1.3.12 =
+Improves the setup experience with a clearer shipping-origin form and a direct configuration reminder in the dashboard.
+
+= 1.3.11 =
+Adds the Bijak administration dashboard, order tools, improved location selection, and checkout compatibility fixes.
+
+= 1.3.10 =
+Adds Jalali order date filters and improves the Bijak admin setup experience.
 
 = 1.3.7 =
 * Added server-side Bijak API authorization for location-picker sessions.

@@ -29,99 +29,103 @@ msgstr "ثبت سفارش در بیجک ناموفق بود."
 msgid "Your order was successfully registered in Bijak."
 msgstr "سفارش شما با موفقیت در بیجک ثبت شد."
 
-#: includes/class-status.php:212
+#: includes/class-status.php:216
 msgid "Bijak tracking code"
 msgstr "کد رهگیری بیجک"
 
-#: includes/class-status.php:207
+#: includes/class-status.php:211
 msgid "Shipping cost"
 msgstr "هزینه ارسال"
 
-#: includes/class-status.php:202
+#: includes/class-status.php:206
 msgid "Delivery place"
 msgstr "محل تحویل"
 
-#: includes/class-status.php:197
+#: includes/class-admin.php:725
+#: includes/class-status.php:201
 msgid "Destination"
 msgstr "مقصد"
 
 #. translators: %s: destination city
-#: includes/class-status.php:185
+#: includes/class-status.php:189
 #, php-format
 msgid "Delivery to terminal in %s"
 msgstr "تحویل به باربری در %s"
 
-#: includes/class-status.php:169
+#: includes/class-status.php:173
 msgid "Invalid response from Bijak"
 msgstr "پاسخ نامعتبر از بیجک"
 
-#: includes/class-status.php:161
+#: includes/class-status.php:165
 msgid "Details"
 msgstr "جزئیات"
 
-#: includes/class-status.php:160
+#: includes/class-status.php:164
 msgid "Failed to fetch status"
 msgstr "دریافت وضعیت ناموفق بود"
 
-#: includes/class-status.php:151
-#: includes/class-status.php:163
-#: includes/class-status.php:171
-#: includes/class-status.php:221
+#: includes/class-admin.php:726
+#: includes/class-status.php:100
+#: includes/class-status.php:155
+#: includes/class-status.php:167
+#: includes/class-status.php:175
+#: includes/class-status.php:225
 msgid "View in Bijak"
 msgstr "مشاهده در بیجک"
 
-#: includes/class-status.php:148
+#: includes/class-status.php:152
 msgid "Waiting for submission to Bijak"
 msgstr "منتظر ثبت در بیجک"
 
-#: includes/class-status.php:148
-#: includes/class-status.php:160
-#: includes/class-status.php:169
-#: includes/class-status.php:192
+#: includes/class-admin.php:725
+#: includes/class-status.php:152
+#: includes/class-status.php:164
+#: includes/class-status.php:173
+#: includes/class-status.php:196
 msgid "Status"
 msgstr "وضعیت"
 
-#: includes/class-status.php:134
-#: includes/class-status.php:216
+#: includes/class-status.php:137
+#: includes/class-status.php:220
 msgid "Not issued yet"
 msgstr "هنوز صادر نشده"
 
-#: includes/class-status.php:133
+#: includes/class-status.php:136
 msgid "Bijak Tracking Code: "
 msgstr "کد رهگیری بیجک: "
 
-#: includes/class-status.php:132
+#: includes/class-status.php:135
 msgid "Destination: "
 msgstr "مقصد: "
 
-#: includes/class-status.php:131
-#: includes/class-status.php:193
+#: includes/class-status.php:134
+#: includes/class-status.php:197
 msgid "Unknown"
 msgstr "ناشناخته"
 
-#: includes/class-status.php:131
+#: includes/class-status.php:134
 msgid "Status: "
 msgstr "وضعیت: "
 
-#: includes/class-status.php:116
+#: includes/class-status.php:119
 msgid "Details:"
 msgstr "جزئیات:"
 
-#: includes/class-status.php:115
+#: includes/class-status.php:119
 msgid "Failed to fetch status from Bijak"
 msgstr "دریافت وضعیت از بیجک ناموفق بود"
 
-#: includes/class-status.php:108
+#: includes/class-status.php:112
 msgid "Waiting to be submitted to Bijak."
 msgstr "منتظر ثبت شدن در بیجک."
 
 #: includes/class-status.php:37
 #: includes/class-status.php:47
-#: includes/class-status.php:141
+#: includes/class-status.php:145
 msgid "Bijak Shipping Status"
 msgstr "وضعیت ارسال بیجک"
 
-#: includes/class-shipping-method.php:228
+#: includes/class-shipping-method.php:242
 msgid "Free Shipping"
 msgstr "ارسال رایگان"
 
@@ -203,74 +207,70 @@ msgstr "ارسال پیش‌پرداخت/پس‌پرداخت از طریق بی�
 msgid "Bijak Shipping"
 msgstr "حمل و نقل بیجک"
 
-#: includes/class-order-sender.php:447
+#: includes/class-order-sender.php:462
 msgid "Unsuccessful/unknown payment."
 msgstr "پرداخت ناموفق/نامشخص."
 
 #. translators: %s is the payment link for completing wallet payment.
-#: includes/class-order-sender.php:443
+#: includes/class-order-sender.php:458
 #, php-format
 msgid "Bijak Wallet Pay: Insufficient balance. Payment link: %s"
 msgstr "پرداخت از طریق کیف پول بیجک: موجودی کافی نیست. لینک پرداخت: %s"
 
-#: includes/class-order-sender.php:435
+#: includes/class-order-sender.php:450
 msgid "Bijak Wallet Pay: Order successfully paid from wallet."
 msgstr "پرداخت از طریق کیف پول بیجک: سفارش با موفقیت از کیف پول پرداخت شد."
 
 #. translators: %s is the error message returned when trying to pay via wallet.
-#: includes/class-order-sender.php:426
+#: includes/class-order-sender.php:441
 #, php-format
 msgid "Bijak Wallet Pay: Error - %s"
 msgstr "پرداخت از طریق کیف پول بیجک: خطا - %s"
 
-#: includes/class-order-sender.php:411
+#: includes/class-order-sender.php:426
 msgid "Bijak Wallet Pay: UUID is missing; cannot charge wallet."
 msgstr "پرداخت از طریق کیف پول بیجک: شناسه سفارش موجود نیست؛ نمی‌توان از کیف پول برداشت کرد."
 
-#: includes/class-order-sender.php:363
-#: includes/class-status.php:121
+#: includes/class-order-sender.php:378
+#: includes/class-status.php:124
 msgid "Invalid response from Bijak."
 msgstr "پاسخ نامعتبر از بیجک."
 
-#: includes/class-order-sender.php:362
+#: includes/class-order-sender.php:377
 msgid "Invalid response."
 msgstr "پاسخ نامعتبر."
 
 #. translators: %s is the UUID returned from Bijak after order submission.
-#: includes/class-order-sender.php:360
+#: includes/class-order-sender.php:375
 #, php-format
 msgid "Bijak: Order submitted. UUID: %s"
 msgstr "بیجک: سفارش ارسال شد. شناسه سفارش: %s"
 
 #. translators: %s is the error message returned from the Bijak API.
-#: includes/class-order-sender.php:349
+#: includes/class-order-sender.php:364
 #, php-format
 msgid "Bijak: Order submission failed. %s"
 msgstr "بیجک: ارسال سفارش ناموفق بود. %s"
 
-#: includes/class-order-sender.php:266
+#: includes/class-order-sender.php:277
 msgid "Invalid day/interval."
 msgstr "روز/بازه زمانی نامعتبر است."
 
-#: includes/class-order-sender.php:265
+#: includes/class-order-sender.php:276
 msgid "Bijak: No valid working day or time interval found."
 msgstr "بیجک: روز کاری یا بازه زمانی معتبری یافت نشد."
 
-#: includes/class-order-sender.php:241
+#: includes/class-order-sender.php:252
 msgid "Unable to fetch send_data."
 msgstr "قادر به دریافت send_data نیست."
 
-#: includes/class-order-sender.php:240
+#: includes/class-order-sender.php:251
 msgid "Bijak: Failed to fetch working days/time intervals."
 msgstr "بیجک: دریافت روزهای کاری/فواصل زمانی ناموفق بود."
 
-#: includes/class-order-sender.php:215
+#: includes/class-order-sender.php:224
 msgid "No order item with valid dimensions found."
 msgstr "هیچ کالای سفارشی با ابعاد معتبر یافت نشد."
-
-#: includes/class-order-sender.php:214
-msgid "Bijak: No order item with valid dimensions found."
-msgstr "بیجک: هیچ کالای سفارشی با ابعاد معتبر یافت نشد."
 
 #: includes/class-order-sender.php:207
 msgid "No freight line found."
@@ -308,31 +308,28 @@ msgstr "نام یا تلفن فرستنده موجود نیست."
 msgid "Bijak: Sender name or phone is missing."
 msgstr "بیجک: نام یا تلفن فرستنده موجود نیست."
 
-#: includes/class-dashboard.php:75
+#: includes/class-dashboard.php:74
 msgid "View Orders"
 msgstr "مشاهده سفارشات"
 
-#: includes/class-dashboard.php:74
+#: includes/class-dashboard.php:73
 msgid "Top up Wallet"
 msgstr "شارژ کیف پول"
 
-#: includes/class-dashboard.php:64
+#: includes/class-admin.php:627
+#: includes/class-dashboard.php:61
 msgid "Wallet Balance"
 msgstr "موجودی کیف پول"
 
-#: includes/class-dashboard.php:62
-msgid "Phone Number"
-msgstr "شماره تلفن"
-
-#: includes/class-dashboard.php:60
+#: includes/class-dashboard.php:68
 msgid "Account Holder Name"
 msgstr "نام صاحب حساب"
 
-#: includes/class-dashboard.php:55
+#: includes/class-dashboard.php:56
 msgid "Bijak Settings"
 msgstr "تنظیمات بیجک"
 
-#: includes/class-dashboard.php:53
+#: includes/class-dashboard.php:54
 msgid "To view your wallet balance and orders, please enter your API Key on"
 msgstr "برای مشاهده موجودی کیف پول و سفارشات خود، لطفاً کلید API خود را وارد کنید"
 
@@ -340,237 +337,170 @@ msgstr "برای مشاهده موجودی کیف پول و سفارشات خو�
 msgid "Bijak — Smart Freight"
 msgstr "بیجک — باربری هوشمند"
 
-#: includes/class-checkout.php:233
-#: includes/class-checkout.php:237
+#: includes/class-checkout.php:268
+#: includes/class-checkout.php:272
 msgid "Bijak: Shipping via Bijak."
 msgstr "بیجک: ارسال از طریق بیجک."
 
-#: includes/class-checkout.php:159
+#: includes/class-checkout.php:195
 msgid "Origin address is required in Bijak settings for pickup."
 msgstr "آدرس مبدا در تنظیمات بیجک برای تحویل گرفتن الزامی است."
 
-#: includes/class-checkout.php:138
+#: includes/class-checkout.php:165
 msgid "Please select a destination city for Bijak shipping."
 msgstr "لطفا شهر مقصد را برای ارسال بار بیجک انتخاب کنید."
 
-#: includes/class-checkout.php:80
-#: includes/class-status.php:182
+#: includes/class-checkout.php:94
+#: includes/class-status.php:186
 msgid "Door-to-door delivery"
 msgstr "تحویل درب منزل"
 
-#: includes/class-checkout.php:61
+#: includes/class-checkout.php:74
 msgid "Destination city"
 msgstr "شهر مقصد"
 
-#: includes/class-checkout.php:54
+#: includes/class-checkout.php:67
 msgid "Visit Bijak Website"
 msgstr "مشاهده وبسایت بیجک"
 
-#: includes/class-checkout.php:51
+#: includes/class-checkout.php:64
 msgid "Your order will be shipped via Bijak."
 msgstr "سفارش شما از طریق بیجک ارسال خواهد شد."
 
-#: includes/class-checkout.php:48
+#: includes/class-admin.php:656
+#: includes/class-checkout.php:61
 msgid "Shipping with Bijak"
 msgstr "ارسال با بیجک"
 
 #. translators: %d is the HTTP response code returned by the Bijak API.
-#: includes/class-api.php:60
+#: includes/class-api.php:75
 #, php-format
 msgid "HTTP error %d"
 msgstr "HTTP error %d"
 
-#: includes/class-ajax.php:418
+#: includes/class-ajax.php:440
 msgid "Price estimate failed: "
 msgstr "تخمین قیمت ناموفق بود: "
 
-#: includes/class-ajax.php:373
+#: includes/class-ajax.php:395
 msgid "Cart is empty or product dimensions are zero."
 msgstr "سبد خرید خالی است یا ابعاد محصول صفر است."
 
-#: includes/class-ajax.php:355
-msgid "Product weight is missing."
-msgstr "وزن محصول مشخص نیست."
-
-#: includes/class-ajax.php:352
-msgid "Product height is missing."
-msgstr "ارتفاع محصول مشخص نیست."
-
-#: includes/class-ajax.php:349
-msgid "Product width is missing."
-msgstr "عرض محصول مشخص نیست."
-
-#: includes/class-ajax.php:346
-msgid "Product length is missing."
-msgstr "طول محصول مشخص نیست."
-
-#: includes/class-ajax.php:343
+#: includes/class-ajax.php:365
 msgid "Product name is missing."
 msgstr "نام محصول موجود نیست."
 
-#: includes/class-ajax.php:340
+#: includes/class-ajax.php:362
 msgid "Product details not available in cart."
 msgstr "جزئیات محصول در سبد خرید موجود نیست."
 
-#: includes/class-ajax.php:310
-#: includes/class-ajax.php:315
-#: includes/class-ajax.php:328
+#: includes/class-ajax.php:332
+#: includes/class-ajax.php:337
+#: includes/class-ajax.php:350
 msgid "Shipping route not found."
 msgstr "مسیر حمل و نقل یافت نشد."
 
-#: includes/class-ajax.php:302
+#: includes/class-ajax.php:324
 #: includes/class-order-sender.php:193
 msgid "Origin city is not configured."
 msgstr "شهر مبدا پیکربندی نشده است."
 
-#: includes/class-ajax.php:189
+#: includes/class-ajax.php:211
 msgid "origin_city_id is required."
 msgstr "origin_city_id الزامی است."
 
 #. translators: %s: settings url
-#: includes/class-admin.php:486
+#: includes/class-admin.php:767
 #, php-format
 msgid "Please enter your <a href=\"%s\">API Key</a>."
 msgstr "لطفا <a href=\"%s\">کلید API</a> خود را وارد کنید."
 
-#: includes/class-admin.php:483
+#: includes/class-admin.php:764
 msgid "Bijak:"
 msgstr "بیجک:"
 
-#: includes/class-admin.php:456
-msgid "Bijak wallet"
-msgstr "کیف پول بیجک"
-
-#: includes/class-admin.php:453
-msgid "Top up wallet"
-msgstr "شارژ کیف پول"
-
-#: includes/class-admin.php:452
-#: includes/class-dashboard.php:66
-#: includes/class-status.php:208
-#: assets/js/checkout.js:163
-#: assets/js/checkout.js:165
+#: includes/class-admin.php:627
+#: includes/class-dashboard.php:63
+#: includes/class-status.php:212
 msgid "Toman"
 msgstr "تومان"
 
-#: includes/class-admin.php:446
-msgid "Wallet balance"
-msgstr "موجودی کیف پول"
-
-#: includes/class-admin.php:444
-msgid "Phone in Bijak profile"
-msgstr "تلفن در پروفایل بیجک"
-
-#: includes/class-admin.php:442
+#: includes/class-admin.php:722
 msgid "Phone number"
 msgstr "شماره تلفن"
 
-#: includes/class-admin.php:440
-msgid "Name in your Bijak profile"
-msgstr "نام در پروفایل بیجک شما"
-
-#: includes/class-admin.php:438
-msgid "Account holder name"
-msgstr "نام صاحب حساب"
-
-#: includes/class-admin.php:436
-msgid "Bijak account info"
-msgstr "اطلاعات حساب کاربری بیجک"
-
-#: includes/class-admin.php:422
-msgid "After saving, name/phone/wallet will be synced. If \"Origin address\" is empty, it will be filled from your Bijak profile on first sync."
-msgstr "پس از ذخیره، نام/تلفن/کیف پول همگام‌سازی می‌شود. اگر «آدرس مبدا» خالی باشد، در اولین همگام‌سازی از پروفایل بیجک شما پر خواهد شد."
-
-#: includes/class-admin.php:420
-msgid "Create API key"
-msgstr "ایجاد کلید API"
-
-#: includes/class-admin.php:417
-msgid "Save API Key"
-msgstr "ذخیره کلید API"
-
-#: includes/class-admin.php:407
-msgid "Connect to Bijak (API Key)"
-msgstr "اتصال به بیجک (کلید API)"
-
-#: includes/class-admin.php:323
+#: includes/class-admin.php:536
 msgid "Profile info synced from Bijak."
 msgstr "اطلاعات پروفایل از بیجک همگام‌سازی شده است."
 
-#: includes/class-admin.php:306
+#: includes/class-admin.php:519
 msgid "Failed to fetch profile: "
 msgstr "دریافت پروفایل ناموفق بود: "
 
-#: includes/class-admin.php:298
-#: includes/class-dashboard.php:52
+#: includes/class-admin.php:511
+#: includes/class-dashboard.php:53
 msgid "API Key is not set."
 msgstr "کلید API تنظیم نشده است."
 
-#: includes/class-admin.php:200
-#: includes/class-checkout.php:66
+#: includes/class-admin.php:424
+#: includes/class-checkout.php:79
 msgid "— Select —"
 msgstr "— انتخاب کنید —"
 
-#: includes/class-admin.php:195
+#: includes/class-admin.php:419
 msgid "Failed to fetch origin cities from API."
 msgstr "دریافت شهرهای مبدا از API ناموفق بود."
 
-#: includes/class-admin.php:109
+#: includes/class-admin.php:275
 msgid "Second working day"
 msgstr "دومین روز کاری"
 
-#: includes/class-admin.php:108
+#: includes/class-admin.php:274
 msgid "First working day"
 msgstr "اولین روز کاری"
 
-#: includes/class-admin.php:104
+#: includes/class-admin.php:270
 msgid "Pickup day for Bijak"
 msgstr "روز تحویل بار بیجک"
 
-#: includes/class-admin.php:127
+#: includes/class-admin.php:293
 msgid "Origin local transport cost"
 msgstr "هزینه حمل درون‌شهری مبدا"
 
-#: includes/class-admin.php:135
+#: includes/class-admin.php:301
 msgid "Enter a non-negative number (Toman)."
 msgstr "یک عدد صفر یا بیشتر وارد کنید (تومان)."
 
-#: includes/class-admin.php:96
-msgid "Format: latitude,longitude (e.g. 35.6971,51.4041)"
-msgstr "قالب: عرض جغرافیایی، طول جغرافیایی (مثلاً ۳۵.۶۹۷۱، ۵۱.۴۰۴۱)"
-
-#: includes/class-admin.php:88
+#: includes/class-admin.php:244
 msgid "Origin coordinates (lat,lon)"
 msgstr "مختصات مبدا (عرض جغرافیایی، طول جغرافیایی)"
 
-#: includes/class-admin.php:83
+#: includes/class-admin.php:240
 msgid "Origin address (detailed)"
 msgstr "آدرس مبدا (با جزئیات)"
 
-#: includes/class-admin.php:76
+#: includes/class-admin.php:233
 msgid "Yes"
 msgstr "بله"
 
-#: includes/class-admin.php:68
+#: includes/class-admin.php:225
 msgid "Will you deliver to terminal yourself?"
 msgstr "آیا خودتان به انبار تحویل می‌دهید؟"
 
-#: includes/class-admin.php:60
+#: includes/class-admin.php:217
 msgid "Origin city"
 msgstr "شهر مبدا"
 
-#: includes/class-admin.php:56
+#: includes/class-admin.php:213
 msgid "Origin settings"
 msgstr "تنظیمات مبدا"
 
-#: includes/class-admin.php:28
+#: includes/class-admin.php:176
 msgid "Bijak (Shipping)"
 msgstr "بیجک (حمل و نقل)"
 
-#: includes/class-admin.php:27
-#: includes/class-admin.php:38
-#: includes/class-admin.php:39
-#: includes/class-admin.php:399
+#: includes/class-admin.php:175
+#: includes/class-admin.php:186
 msgid "Bijak (Smart Freight)"
 msgstr "بیجک (باربری هوشمند)"
 
@@ -591,6 +521,8 @@ msgstr "ارسال هوشمند بار برای ووکامرس از طریق ب�
 
 #. Plugin Name of the plugin
 #: bijak.php
+#: includes/class-admin.php:589
+#: includes/class-admin.php:619
 msgid "Bijak"
 msgstr "بیجک"
 
@@ -599,11 +531,11 @@ msgstr "بیجک"
 msgid "https://wordpress.org/plugins/bijak/"
 msgstr ""
 
-#: includes/class-checkout.php:83
+#: includes/class-checkout.php:97
 msgid "If door-to-door delivery is unchecked, your shipment will be delivered to the destination city cargo terminal."
 msgstr "اگر تیک تحویل درب منزل خاموش باشد، بار به مرکز تخلیه بار شهر مقصد تحویل داده می‌شود."
 
-#: includes/class-checkout.php:86
+#: includes/class-checkout.php:100
 msgid "Guide to destination city cargo terminals"
 msgstr "راهنمای مراکز تخلیه بار شهرها"
 
@@ -611,210 +543,378 @@ msgstr "راهنمای مراکز تخلیه بار شهرها"
 msgid "Order not found."
 msgstr ""
 
-#: includes/class-ajax.php:87
-#: includes/class-ajax.php:127
-#: includes/class-ajax.php:168
+#: includes/class-ajax.php:70
+#: includes/class-ajax.php:141
+#: includes/class-ajax.php:180
 msgid "WooCommerce session is not available."
 msgstr "نشست ووکامرس در دسترس نیست."
 
-#: includes/class-ajax.php:96
+#: includes/class-ajax.php:85
 msgid "Select a destination city and ensure the location picker configuration is valid."
 msgstr "یک شهر مقصد انتخاب کنید و از معتبر بودن پیکربندی انتخاب‌گر موقعیت مطمئن شوید."
 
-#: includes/class-ajax.php
+#: includes/class-admin.php:345
+#: includes/class-ajax.php:93
 msgid "The Bijak API key is inactive or this domain is not authorized to use the location picker."
 msgstr "کلید API بیجک غیرفعال است یا این دامنه مجوز استفاده از انتخاب‌گر موقعیت را ندارد."
 
-#: includes/class-ajax.php:107
+#: includes/class-admin.php:346
+#: includes/class-ajax.php:106
 msgid "Unable to create a secure picker session."
 msgstr "ایجاد نشست امن انتخاب‌گر موقعیت ممکن نیست."
 
-#: includes/class-ajax.php:134
+#: includes/class-ajax.php:148
 msgid "This location picker session is invalid."
 msgstr "نشست انتخاب‌گر موقعیت نامعتبر است."
 
-#: includes/class-ajax.php:138
+#: includes/class-ajax.php:152
 msgid "This location picker session has expired."
 msgstr "نشست انتخاب‌گر موقعیت منقضی شده است."
 
-#: includes/class-ajax.php:144
+#: includes/class-ajax.php:158
 msgid "The destination city changed. Please select the location again."
 msgstr "شهر مقصد تغییر کرده است. لطفا موقعیت را دوباره انتخاب کنید."
 
-#: includes/class-ajax.php
-msgid "The location picker authorization is missing."
-msgstr "مجوز انتخاب‌گر موقعیت وجود ندارد."
-
-#: includes/class-ajax.php
-msgid "The Bijak API key is inactive. Please refresh and try again."
-msgstr "کلید API بیجک غیرفعال است. صفحه را تازه‌سازی کرده و دوباره تلاش کنید."
-
-#: includes/class-ajax.php:150
+#: includes/class-admin.php:360
+#: includes/class-ajax.php:164
 msgid "The selected coordinates are invalid."
 msgstr "مختصات انتخاب‌شده نامعتبر است."
 
-#: includes/class-ajax.php:273
+#: includes/class-ajax.php:295
 msgid "Please select a destination city."
 msgstr "لطفا یک شهر مقصد انتخاب کنید."
 
-#: includes/class-ajax.php:285
+#: includes/class-ajax.php:307
 msgid "Please select the delivery location on the map first."
 msgstr "لطفا ابتدا محل تحویل را روی نقشه انتخاب کنید."
 
-#: includes/class-checkout.php:92
+#: includes/class-checkout.php:106
 msgid "Select delivery location on map"
 msgstr "انتخاب محل تحویل روی نقشه"
 
-#: includes/class-checkout.php:96
-#: assets/js/checkout.js:139
+#: includes/class-checkout.php:110
 msgid "Location selected"
 msgstr "موقعیت انتخاب شد"
 
-#: includes/class-checkout.php:98
-#: assets/js/checkout.js:142
+#: includes/class-checkout.php:112
 msgid "Location not selected"
 msgstr "موقعیت انتخاب نشده است"
 
-#: includes/class-checkout.php:152
+#: includes/class-checkout.php:188
 msgid "Please select the delivery location on the map."
 msgstr "لطفا محل تحویل را روی نقشه انتخاب کنید."
 
-#: includes/class-order-sender.php:292
+#: includes/class-order-sender.php:308
 msgid "Bijak: Door-to-door delivery requires a valid destination location."
 msgstr "بیجک: تحویل درب منزل به موقعیت معتبر مقصد نیاز دارد."
 
-#: includes/class-order-sender.php:293
+#: includes/class-order-sender.php:309
 msgid "Destination coordinates are missing or invalid."
 msgstr "مختصات مقصد وجود ندارد یا نامعتبر است."
 
-#: includes/class-shipping-method.php:187
+#: includes/class-shipping-method.php:201
 msgid "Please select delivery location"
 msgstr "لطفا محل تحویل را انتخاب کنید"
 
-#: includes/class-shipping-method.php:190
+#: includes/class-shipping-method.php:204
 msgid "Destination location is required for door-to-door delivery."
 msgstr "برای تحویل درب منزل، انتخاب موقعیت مقصد الزامی است."
 
-#: assets/js/checkout.js:80
-msgid "Select delivery location"
-msgstr "انتخاب محل تحویل"
-
-#: assets/js/checkout.js:81
-msgid "Close"
-msgstr "بستن"
-
-#: assets/js/checkout.js:82
-#: assets/js/checkout.js:115
-msgid "Loading location picker..."
-msgstr "در حال بارگذاری انتخاب‌گر موقعیت..."
-
-#: assets/js/checkout.js:83
-msgid "Delivery location picker"
-msgstr "انتخاب‌گر محل تحویل"
-
-#: assets/js/checkout.js:104
-msgid "Please select a destination city first."
-msgstr "لطفا ابتدا یک شهر مقصد انتخاب کنید."
-
-#: assets/js/checkout.js
-msgid "The selected checkout city is not available for Bijak. Please choose a Bijak destination city."
-msgstr "شهر انتخاب‌شده در تسویه‌حساب در فهرست بیجک نیست. لطفاً یک شهر مقصد بیجک انتخاب کنید."
-
-#: assets/js/checkout.js:105
-msgid "The location picker is not configured."
-msgstr "انتخاب‌گر موقعیت پیکربندی نشده است."
-
-#: assets/js/checkout.js:108
-msgid "Creating a secure picker session..."
-msgstr "در حال ایجاد نشست امن انتخاب‌گر موقعیت..."
-
-#: assets/js/checkout.js:112
-#: assets/js/checkout.js:121
-msgid "Unable to open location picker."
-msgstr "باز کردن انتخاب‌گر موقعیت ممکن نیست."
-
-#: assets/js/checkout.js:118
-msgid "The location picker could not be loaded."
-msgstr "انتخاب‌گر موقعیت بارگذاری نشد."
-
-#: assets/js/checkout.js:153
-msgid "Calculating..."
-msgstr "در حال محاسبه..."
-
-#: assets/js/checkout.js:159
-#: assets/js/checkout.js:172
-msgid "Failed to estimate price"
-msgstr "محاسبه هزینه ناموفق بود"
-
-#: assets/js/checkout.js:165
-msgid "Total"
-msgstr "مجموع"
-
-#: assets/js/checkout.js:215
-msgid "Saving selected location..."
-msgstr "در حال ذخیره موقعیت انتخاب‌شده..."
-
-#: assets/js/checkout.js:218
-#: assets/js/checkout.js:223
-msgid "Unable to save location."
-msgstr "ذخیره موقعیت ممکن نیست."
-
-#: includes/class-admin.php
+#: includes/class-admin.php:251
 msgid "Fill address from Bijak profile"
 msgstr "پر کردن آدرس از پروفایل بیجک"
 
-#: includes/class-admin.php
+#: includes/class-admin.php:252
 msgid "Choose origin on map"
 msgstr "انتخاب مبدا روی نقشه"
 
-#: includes/class-admin.php
+#: includes/class-admin.php:256
 msgid "View origin on Neshan map"
 msgstr "مشاهده مبدا در نقشه نشان"
 
-#: includes/class-admin.php
+#: includes/class-admin.php:258
 msgid "Origin location is not set."
 msgstr "موقعیت مبدا ثبت نشده است."
 
-#: includes/class-admin.php
+#: includes/class-admin.php:318
 msgid "You are not allowed to manage Bijak settings."
 msgstr "شما اجازه مدیریت تنظیمات بیجک را ندارید."
 
-#: includes/class-admin.php
+#: includes/class-admin.php:326
 msgid "Unable to read the Bijak profile."
 msgstr "دریافت پروفایل بیجک ناموفق بود."
 
-#: includes/class-admin.php
+#: includes/class-admin.php:343
 msgid "The location picker configuration is invalid."
 msgstr "پیکربندی انتخاب‌گر موقعیت نامعتبر است."
 
-#: includes/class-admin.php
+#: includes/class-admin.php:357
 msgid "This location picker session is invalid or expired."
 msgstr "نشست انتخاب‌گر موقعیت نامعتبر یا منقضی شده است."
 
-#: includes/class-admin.php
-msgid "The Bijak API key is inactive. Please try again."
-msgstr "کلید API بیجک غیرفعال است. دوباره تلاش کنید."
-
-#: includes/class-admin.php
-msgid "The origin address changed, so its coordinates were cleared. Choose the origin on the map and save the settings."
-msgstr "آدرس مبدا تغییر کرد؛ بنابراین مختصات آن پاک شد. مبدا را روی نقشه انتخاب و تنظیمات را ذخیره کنید."
-
-#: includes/class-admin.php
-msgid "Name, phone and wallet are synced from Bijak. Use the profile button or map to set the origin address and location."
-msgstr "نام، تلفن و کیف پول از بیجک همگام می‌شوند. برای تنظیم آدرس و موقعیت مبدا از دکمه پروفایل یا نقشه استفاده کنید."
-
-#: includes/class-shipping-method.php
+#: includes/class-shipping-method.php:171
 msgid "Origin location required in Bijak settings"
 msgstr "تنظیم موقعیت مبدا در تنظیمات بیجک الزامی است"
 
-#: includes/class-shipping-method.php
+#: includes/class-shipping-method.php:174
 msgid "Origin address and location must be configured by an administrator."
 msgstr "آدرس و موقعیت مبدا باید توسط مدیر تنظیم شود."
 
-#: includes/class-order-sender.php
+#: includes/class-order-sender.php:284
 msgid "Bijak: Origin address and location are not configured."
 msgstr "بیجک: آدرس و موقعیت مبدا تنظیم نشده است."
 
-#: includes/class-order-sender.php
+#: includes/class-order-sender.php:285
 msgid "Origin location is required in Bijak settings."
 msgstr "تنظیم موقعیت مبدا در تنظیمات بیجک الزامی است."
+
+#: includes/class-admin.php:187
+msgid "Dashboard"
+msgstr "داشبورد"
+
+#: includes/class-admin.php:195
+#: includes/class-admin.php:590
+msgid "Bijak Setup & Settings"
+msgstr "راه‌اندازی و تنظیمات بیجک"
+
+#: includes/class-admin.php:196
+msgid "Setup & Settings"
+msgstr "راه‌اندازی و تنظیمات"
+
+#: includes/class-admin.php:590
+msgid "Connect your store and manage shipping settings in one place."
+msgstr "فروشگاه را متصل کنید و تنظیمات ارسال را در یک‌جا مدیریت کنید."
+
+#: includes/class-admin.php:592
+msgid "The origin address changed. Select its point on the map and save the settings."
+msgstr "آدرس مبدا تغییر کرده است. نقطه مبدا را روی نقشه انتخاب و تنظیمات را ذخیره کنید."
+
+#: includes/class-admin.php:594
+msgid "Connect Your Bijak Account"
+msgstr "اتصال حساب بیجک"
+
+#: includes/class-admin.php:594
+msgid "Create an API key in the Bijak panel and enter it here."
+msgstr "کلید API را در پنل بیجک بسازید و اینجا وارد کنید."
+
+#: includes/class-admin.php:597
+msgid "Save & Sync"
+msgstr "ذخیره و همگام‌سازی"
+
+#: includes/class-admin.php:598
+msgid "Create API Key"
+msgstr "ایجاد کلید API"
+
+#: includes/class-admin.php:600
+msgid "Shipping Origin"
+msgstr "مبدا ارسال"
+
+#: includes/class-admin.php:604
+msgid "Save Settings"
+msgstr "ذخیره تنظیمات"
+
+#: includes/class-admin.php:620
+msgid "Bijak Dashboard"
+msgstr "داشبورد بیجک"
+
+#: includes/class-admin.php:620
+msgid "Review your account, wallet balance, and shipping orders at a glance."
+msgstr "حساب، موجودی کیف پول و سفارش‌های ارسال را یک‌جا ببینید."
+
+#: includes/class-admin.php:623
+msgid "Your Bijak account is not connected yet"
+msgstr "حساب بیجک هنوز متصل نشده است"
+
+#: includes/class-admin.php:623
+msgid "Save an API key first to view your wallet balance and orders."
+msgstr "برای مشاهده موجودی کیف پول و سفارش‌ها، ابتدا کلید API را ذخیره کنید."
+
+#: includes/class-admin.php:623
+msgid "Start Setup"
+msgstr "شروع راه‌اندازی"
+
+#: includes/class-admin.php:627
+msgid "Manage Wallet"
+msgstr "مدیریت کیف پول"
+
+#: includes/class-admin.php:627
+msgid "Connected Account"
+msgstr "حساب متصل"
+
+#: includes/class-admin.php:627
+msgid "Based on the active filters"
+msgstr "بر اساس فیلترهای فعال"
+
+#: includes/class-admin.php:721
+msgid "Bijak Orders"
+msgstr "سفارش‌های بیجک"
+
+#: includes/class-admin.php:721
+msgid "Refresh"
+msgstr "به‌روزرسانی"
+
+#: includes/class-admin.php:722
+msgid "Search orders"
+msgstr "جست‌وجوی سفارش‌ها"
+
+#: includes/class-admin.php:722
+msgid "Tracking number"
+msgstr "کد رهگیری"
+
+#: includes/class-admin.php:722
+msgid "Active"
+msgstr "فعال"
+
+#: includes/class-admin.php:722
+msgid "Previous"
+msgstr "قبلی"
+
+#: includes/class-admin.php:722
+msgid "Start date"
+msgstr "از تاریخ"
+
+#: includes/class-admin.php:722
+msgid "End date"
+msgstr "تا تاریخ"
+
+#: includes/class-admin.php:722
+msgid "Filter"
+msgstr "فیلتر"
+
+#: includes/class-admin.php:722
+msgid "Clear"
+msgstr "پاک کردن"
+
+#: includes/class-admin.php:724
+msgid "No orders found for the selected filters."
+msgstr "سفارشی با فیلترهای انتخاب‌شده پیدا نشد."
+
+#: includes/class-admin.php:725
+msgid "Order"
+msgstr "سفارش"
+
+#: includes/class-admin.php:725
+msgid "Counterparty"
+msgstr "طرف حساب"
+
+#: includes/class-admin.php:725
+msgid "Tracking"
+msgstr "رهگیری"
+
+#: includes/class-admin.php:725
+msgid "Created"
+msgstr "ایجاد شده"
+
+#: includes/class-admin.php:725
+msgid "Updated"
+msgstr "به‌روزرسانی شده"
+
+#: includes/class-admin.php:725
+msgid "Actions"
+msgstr "عملیات"
+
+#: includes/class-admin.php:739
+msgid "Orders pagination"
+msgstr "صفحه‌بندی سفارش‌ها"
+
+#: includes/class-admin.php:740
+msgid "Previous page"
+msgstr "صفحه قبلی"
+
+#: includes/class-admin.php:746
+msgid "Next page"
+msgstr "صفحه بعدی"
+
+#: includes/class-admin.php:627
+msgid "Total Orders"
+msgstr "کل سفارش‌ها"
+
+#: includes/class-admin.php:726
+msgid "Copy tracking number"
+msgstr "کپی کد رهگیری"
+
+#: includes/class-admin.php:628
+msgid "For viewing, payments, and other activities, use the Bijak web app."
+msgstr "برای مشاهده، پرداخت و انجام موارد دیگر از وب‌اپلیکیشن بیجک استفاده کنید."
+
+#: includes/class-admin.php:628
+msgid "Open Bijak Web App"
+msgstr "ورود به وب‌اپلیکیشن بیجک"
+
+#: includes/class-dashboard.php:72
+msgid "Open Bijak Dashboard"
+msgstr "داشبورد بیجک"
+
+#: includes/class-admin.php:600
+msgid "Set the pickup city, address, and exact map location used for Bijak shipments."
+msgstr "شهر، آدرس و موقعیت دقیق نقشه برای دریافت بار بیجک را تنظیم کنید."
+
+#: includes/class-admin.php:621
+msgid "Make sure your API key and shipping origin settings are correct."
+msgstr "از درست بودن کلید API و تنظیمات مبدا ارسال خود مطمئن شوید."
+
+#: includes/class-admin.php:621
+msgid "Review Setup & Settings"
+msgstr "بررسی راه‌اندازی و تنظیمات"
+
+#: includes/class-admin.php:722
+msgid "Shipping status"
+msgstr "وضعیت ارسال"
+
+#: includes/class-admin.php:656
+msgid "All shipping methods"
+msgstr "همه روش‌های ارسال"
+
+#: includes/class-admin.php:36
+#: includes/class-helpers.php:47
+msgid "Length"
+msgstr "طول"
+
+#: includes/class-admin.php:41
+#: includes/class-helpers.php:48
+msgid "Width"
+msgstr "عرض"
+
+#: includes/class-admin.php:46
+#: includes/class-helpers.php:49
+msgid "Height"
+msgstr "ارتفاع"
+
+#: includes/class-admin.php:51
+#: includes/class-helpers.php:50
+msgid "Weight"
+msgstr "وزن"
+
+#: includes/class-admin.php:76
+#: includes/class-admin.php:125
+msgid "Bijak Shipping Dimensions"
+msgstr "ابعاد ارسال بیجک"
+
+#: includes/class-admin.php:78
+msgid "Optional overrides for Bijak shipping. Empty fields use the standard WooCommerce product values."
+msgstr "مقادیر جایگزین اختیاری برای ارسال بیجک. فیلدهای خالی از مقادیر استاندارد محصول در ووکامرس استفاده می‌کنند."
+
+#: includes/class-admin.php:88
+msgid "Used for Bijak when filled."
+msgstr "در صورت تکمیل، برای بیجک استفاده می‌شود."
+
+#: includes/class-admin.php:126
+msgid "Optional overrides for Bijak shipping. Empty fields use the standard WooCommerce variation values."
+msgstr "مقادیر جایگزین اختیاری برای ارسال بیجک. فیلدهای خالی از مقادیر استاندارد متغیر محصول در ووکامرس استفاده می‌کنند."
+
+#. translators: %1$s is the product name, %2$s is a comma-separated list of missing dimensions.
+#: includes/class-ajax.php:373
+#: includes/class-checkout.php:134
+#: includes/class-order-sender.php:219
+#, php-format
+msgid "Bijak shipping dimensions are incomplete for \"%1$s\": %2$s."
+msgstr "ابعاد ارسال بیجک برای «%1$s» کامل نیست: %2$s."
+
+#: includes/class-helpers.php:84
+msgid "Unknown product"
+msgstr "محصول نامشخص"
+
+#: includes/class-helpers.php:85
+#: includes/class-helpers.php:110
+msgid "Product details"
+msgstr "جزئیات محصول"

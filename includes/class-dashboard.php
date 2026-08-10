@@ -45,34 +45,33 @@ class Dashboard
 
 		$wallet_url = Config::PANEL_WALLET_URL;
 		$orders_url = Config::PANEL_ORDERS_URL;
+		$dashboard_url = admin_url('admin.php?page=bijak-woo');
 
-		echo '<div class="bijak-dash">';
+		echo '<div class="bijak-dash bijak-dashboard-widget">';
 
 		if (! $has_key) {
 			echo '<p><strong>' . esc_html__('API Key is not set.', 'bijak') . '</strong> ';
 			echo esc_html__('To view your wallet balance and orders, please enter your API Key on', 'bijak') . ' ';
-			echo '<a href="' . esc_url(admin_url('admin.php?page=bijak-woo')) . '">'
+			echo '<a href="' . esc_url(admin_url('admin.php?page=bijak-woo-settings')) . '">'
 				. esc_html__('Bijak Settings', 'bijak') . '</a>.';
 			echo '</p>';
 		}
 
-		echo '<div class="row">';
-		echo '<div class="item"><span class="label">' . esc_html__('Account Holder Name', 'bijak') . '</span><span class="val">'
-			. esc_html($full !== '' ? $full : '—') . '</span></div>';
-		echo '<div class="item"><span class="label">' . esc_html__('Phone Number', 'bijak') . '</span><span class="val" style="direction:ltr">'
-			. esc_html($phone !== '' ? $phone : '—') . '</span></div>';
-		echo '<div class="item"><span class="label">' . esc_html__('Wallet Balance', 'bijak') . '</span><span class="val"><span class="badge">';
+		echo '<div class="bijak-widget-summary">';
+		echo '<div class="bijak-widget-wallet"><span class="dashicons dashicons-money-alt"></span><div><span class="label">' . esc_html__('Wallet Balance', 'bijak') . '</span><span class="val"><span class="badge">';
 		if ($has_key) {
 			echo esc_html(number_format_i18n($wallet) . ' ' . __('Toman', 'bijak'));
 		} else {
 			echo esc_html('—');
 		}
-		echo '</span></span></div>';
+		echo '</span></span></div></div>';
+		echo '<div class="bijak-widget-account"><span class="dashicons dashicons-admin-users"></span><div><span class="label">' . esc_html__('Account Holder Name', 'bijak') . '</span><span class="val">' . esc_html($full !== '' ? $full : '—') . '</span><span class="bijak-widget-phone" dir="ltr">' . esc_html($phone !== '' ? $phone : '—') . '</span></div></div>';
 		echo '</div>';
 
-		echo '<div class="actions">';
-		echo '<a class="btn" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up Wallet', 'bijak') . '</a>';
-		echo '<a class="btn" href="' . esc_url($orders_url) . '" target="_blank" rel="noopener">' . esc_html__('View Orders', 'bijak') . '</a>';
+		echo '<div class="actions bijak-widget-actions">';
+		echo '<a class="btn bijak-widget-dashboard-link" href="' . esc_url($dashboard_url) . '"><span class="dashicons dashicons-chart-bar"></span> ' . esc_html__('Open Bijak Dashboard', 'bijak') . '</a>';
+		echo '<a class="btn bijak-widget-secondary-link" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up Wallet', 'bijak') . '</a>';
+		echo '<a class="btn bijak-widget-secondary-link" href="' . esc_url($orders_url) . '" target="_blank" rel="noopener">' . esc_html__('View Orders', 'bijak') . '</a>';
 		echo '</div>';
 
 		echo '</div>';

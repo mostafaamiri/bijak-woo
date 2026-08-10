@@ -108,7 +108,6 @@ class Ajax
 
 		$session->set('bijak_location_picker_state', [
 			'state' => $state,
-			'grant' => sanitize_text_field((string) $authorization['grant']),
 			'created_at' => time(),
 			'destination_city_id' => $city_id,
 			'consumed' => false,
@@ -157,21 +156,6 @@ class Ajax
 		if (!$current_city || $current_city !== (int) ($pending['destination_city_id'] ?? 0)) {
 			$this->clear_location();
 			wp_send_json_error(['message' => __('The destination city changed. Please select the location again.', 'bijak')], 400);
-		}
-
-		$parent_origin = Config::origin_from_url(home_url('/'));
-		$grant = is_scalar($pending['grant'] ?? null) ? (string) $pending['grant'] : '';
-		$authorization = $grant !== '' && $parent_origin !== ''
-			? $this->api->request('/application/location-picker/verify', 'POST', [
-				'grant' => $grant,
-				'origin' => $parent_origin,
-			])
-			: new \WP_Error('picker_authorization', __('The location picker authorization is missing.', 'bijak'));
-		if (is_wp_error($authorization) || empty($authorization['authorized'])) {
-			$session->__unset('bijak_location_picker_state');
-			wp_send_json_error([
-				'message' => __('The Bijak API key is inactive. Please refresh and try again.', 'bijak'),
-			], 403);
 		}
 
 		$lat = $this->valid_coordinate(isset($_POST['lat']) ? wp_unslash($_POST['lat']) : '', -90.0, 90.0);
@@ -374,31 +358,31 @@ class Ajax
 		if (function_exists('WC') && WC()->cart && ! WC()->cart->is_empty()) {
 			foreach (WC()->cart->get_cart() as $item) {
 				$p = $item['data'];
-				if (! $p) {
+				if (! $p instanceof \WC_Product) {
 					wp_send_json_error(['message' => __('Product details not available in cart.', 'bijak')]);
 				}
 				if (! $p->get_name()) {
 					wp_send_json_error(['message' => __('Product name is missing.', 'bijak')]);
 				}
-				if (! $p->get_length()) {
-					wp_send_json_error(['message' => __('Product length is missing.', 'bijak')]);
-				}
-				if (! $p->get_width()) {
-					wp_send_json_error(['message' => __('Product width is missing.', 'bijak')]);
-				}
-				if (! $p->get_height()) {
-					wp_send_json_error(['message' => __('Product height is missing.', 'bijak')]);
-				}
-				if (! $p->get_weight()) {
-					wp_send_json_error(['message' => __('Product weight is missing.', 'bijak')]);
+				$dimensions = Helpers::resolve_product_dimensions($p);
+				if (! empty($dimensions['missing'])) {
+					$missing = implode(', ', array_values($dimensions['missing']));
+					wp_send_json_error([
+						'message' => sprintf(
+							// translators: %1$s is the product name, %2$s is a comma-separated list of missing dimensions.
+							__('Bijak shipping dimensions are incomplete for "%1$s": %2$s.', 'bijak'),
+							$p->get_name(),
+							$missing
+						),
+					]);
 				}
 
 				$goods_details[] = [
 					'title'                   => $p->get_name(),
-					'length'                  => (float) $p->get_length(),
-					'width'                   => (float) $p->get_width(),
-					'height'                  => (float) $p->get_height(),
-					'weight'                  => (float) $p->get_weight(),
+					'length'                  => $dimensions['length'],
+					'width'                   => $dimensions['width'],
+					'height'                  => $dimensions['height'],
+					'weight'                  => $dimensions['weight'],
 					'goods_count'             => (int) $item['quantity'],
 					'needs_packaging'         => false,
 					'goods_packaging_type_id' => 1,
@@ -414,7 +398,7 @@ class Ajax
 		$goods_value = 0;
 		if (function_exists('WC') && WC()->cart) {
 			$totals = WC()->cart->get_totals();
-			$goods_value = isset($totals['total']) ? (int) round($totals['total']) : 0;
+			$goods_value = isset($totals['total']) ? (int) round(Helpers::store_currency_to_toman((float) $totals['total'])) : 0;
 		}
 
 		$self_delivery = Plugin::opt('self_delivery', 'yes') === 'yes';

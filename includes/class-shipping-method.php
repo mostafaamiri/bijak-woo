@@ -158,7 +158,7 @@ class Shipping_Method extends \WC_Shipping_Method
 		$goods_value = 0;
 		if (function_exists('WC') && WC()->cart) {
 			$totals      = WC()->cart->get_totals();
-			$goods_value = isset($totals['total']) ? (int) round($totals['total']) : 0;
+			$goods_value = isset($totals['total']) ? (int) round(Helpers::store_currency_to_toman((float) $totals['total'])) : 0;
 		}
 
 		$self_delivery = Plugin::opt('self_delivery', 'yes') === 'yes';

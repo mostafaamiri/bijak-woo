@@ -362,6 +362,7 @@ jQuery(function ($) {
       .done(function (res) {
         if (!res || !res.success || !res.data || !res.data.url || !res.data.state) { showModalError((res && res.data && res.data.message) || __('Unable to open location picker.', 'bijak')); return; }
         pickerState = String(res.data.state);
+        $modal.attr('data-picker-state', pickerState);
         pickerIframe.src = String(res.data.url);
         $modal.find('.bijak-location-modal__loading').text(__('Loading location picker...', 'bijak'));
         clearTimeout(pickerLoadTimer);
@@ -407,26 +408,36 @@ jQuery(function ($) {
 
   function bijakPriceEstimate(triggerUpdate, preferredBox) {
     const values = boxValues(preferredBox);
-    const $out = values.$box.find('#bijak_estimate_result').text(__('Calculating...', 'bijak'));
+    const $out = values.$box.find('#bijak_estimate_result')
+      .removeClass('is-error is-ready')
+      .addClass('is-loading')
+      .text(__('Calculating...', 'bijak'));
     return $.post(config.ajax_url, {
       action: 'bijak_price_estimate', nonce: config.nonce,
       dest_city_id: values.cityId,
       is_door_delivery: values.isDoor ? 1 : 0
     }).done(function (res) {
-      if (!res || !res.success) { $out.text((res && res.data && res.data.message) || __('Failed to estimate price', 'bijak')); return; }
+      if (!res || !res.success) {
+        $out.removeClass('is-loading is-ready').addClass('is-error')
+          .text((res && res.data && res.data.message) || __('Failed to estimate price', 'bijak'));
+        return;
+      }
       const data = res.data.data || {};
       let html = '<ul>';
       (data.items || []).forEach(function (item) {
         html += '<li>' + $('<div>').text(item.text || '').html() + ' : ' + Number(item.value || 0).toLocaleString('fa-IR') + ' ' + __('Toman', 'bijak') + '</li>';
       });
       html += '</ul><strong>' + __('Total', 'bijak') + ': ' + Number(data.sum || 0).toLocaleString('fa-IR') + ' ' + __('Toman', 'bijak') + '</strong>';
-      $out.html(html);
+      $out.removeClass('is-loading is-error').addClass('is-ready').html(html);
       if (triggerUpdate) {
         updatingCheckout = true;
         $(document.body).trigger('update_checkout');
         setTimeout(function () { updatingCheckout = false; }, 800);
       }
-    }).fail(function (xhr) { $out.text((xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || __('Failed to estimate price', 'bijak')); });
+    }).fail(function (xhr) {
+      $out.removeClass('is-loading is-ready').addClass('is-error')
+        .text((xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || __('Failed to estimate price', 'bijak'));
+    });
   }
 
   function showBox() {
@@ -439,7 +450,7 @@ jQuery(function ($) {
       values.$box.find('.bijak-location-picker').toggle(values.isDoor);
       syncDestinationCity(values.$box.find('[name="bijak_dest_city"]'), true);
     } else {
-      $('#bijak_estimate_result').empty();
+      $('#bijak_estimate_result').removeClass('is-loading is-error is-ready').empty();
     }
   }
 
@@ -480,15 +491,24 @@ jQuery(function ($) {
 
   // One global listener; validate origin, source, protocol and one-time state.
   window.addEventListener('message', function (event) {
-    if (!pickerIframe || !pickerState || event.origin !== config.map_picker_origin || event.source !== pickerIframe.contentWindow) return;
+    const activeIframe = $('#bijak-location-modal iframe')[0] || pickerIframe;
+    let activeState = String($('#bijak-location-modal').attr('data-picker-state') || pickerState || '');
+    if (activeIframe && activeIframe.src) {
+      try {
+        activeState = new URL(activeIframe.src, window.location.href).searchParams.get('state') || activeState;
+      } catch (error) {
+        // Keep the state captured when the modal was opened.
+      }
+    }
+    if (!activeIframe || !activeState || event.origin !== config.map_picker_origin || event.source !== activeIframe.contentWindow) return;
     const data = event.data;
-    if (!data || data.type !== 'BIJAK_LOCATION_SELECTED' || data.version !== 1 || data.state !== pickerState) return;
+    if (!data || data.type !== 'BIJAK_LOCATION_SELECTED' || data.version !== 1 || data.state !== activeState) return;
     if (data.lat === undefined || data.lat === null || data.lng === undefined || data.lng === null) return;
     const lat = Number(data.lat), lng = Number(data.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
     const $modal = ensureModal();
     $modal.find('.bijak-location-modal__loading').show().text(__('Saving selected location...', 'bijak'));
-    $.post(config.ajax_url, { action: 'bijak_save_destination_location', nonce: config.nonce, state: pickerState, lat: lat, lng: lng })
+    $.post(config.ajax_url, { action: 'bijak_save_destination_location', nonce: config.nonce, state: activeState, lat: lat, lng: lng })
       .done(function (res) {
         if (!res || !res.success) { showModalError((res && res.data && res.data.message) || __('Unable to save location.', 'bijak')); return; }
         setLocationStatus(true, '');

@@ -211,15 +211,27 @@ class Order_Sender {
 		// Goods
 		$goods_details = Helpers::build_goods_details_from_order( $order );
 		if ( empty( $goods_details ) ) {
-			$order->add_order_note( __( 'Bijak: No order item with valid dimensions found.', 'bijak' ) );
-			$this->set_order_error( $order, __( 'No order item with valid dimensions found.', 'bijak' ) );
+			$dimension_errors = Helpers::order_dimension_errors( $order );
+			if ( ! empty( $dimension_errors ) ) {
+				$first = reset( $dimension_errors );
+				// translators: %1$s is the product name, %2$s is a comma-separated list of missing dimensions.
+				$message = sprintf(
+					__( 'Bijak shipping dimensions are incomplete for "%1$s": %2$s.', 'bijak' ),
+					$first['name'],
+					implode( ', ', $first['missing'] )
+				);
+			} else {
+				$message = __( 'No order item with valid dimensions found.', 'bijak' );
+			}
+			$order->add_order_note( 'Bijak: ' . $message );
+			$this->set_order_error( $order, $message );
 			return;
 		}
 
 		$self_delivery = Plugin::opt( 'self_delivery', 'yes' ) === 'yes';
 
 		$is_door     = $this->get_order_meta( $order, '_bijak_is_door_delivery', '' ) === '1';
-		$goods_value = max( 1000, (int) round( $order->get_total() ) );
+		$goods_value = max( 1000, (int) round( Helpers::store_currency_to_toman( (float) $order->get_total() ) ) );
 
 		// Address (fallbacks between shipping and billing)
 		$shipping_a1 = trim( (string) $order->get_shipping_address_1() );

@@ -16,7 +16,152 @@ class Admin
 		add_action('admin_init', [$this, 'register_settings']);
 		add_action('admin_menu', [$this, 'admin_menu']);
 		add_action('admin_notices', [$this, 'maybe_notice_api_key']);
+		add_action('woocommerce_order_list_table_restrict_manage_orders', [$this, 'render_order_shipping_filter'], 20, 2);
+		add_filter('woocommerce_order_list_table_prepare_items_query_args', [$this, 'filter_hpos_orders'], 20);
+		add_action('restrict_manage_posts', [$this, 'render_legacy_order_shipping_filter'], 20);
+		add_action('pre_get_posts', [$this, 'filter_legacy_orders'], 20);
 		add_filter('pre_update_option_' . Plugin::OPT, [$this, 'pre_update_options'], 10, 3);
+		add_action('woocommerce_product_options_shipping', [$this, 'render_product_bijak_dimensions']);
+		add_action('woocommerce_admin_process_product_object', [$this, 'save_product_bijak_dimensions']);
+		add_action('woocommerce_variation_options_dimensions', [$this, 'render_variation_bijak_dimensions'], 10, 3);
+		add_action('woocommerce_save_product_variation', [$this, 'save_variation_bijak_dimensions'], 10, 2);
+	}
+
+	/* ---------- Product shipping dimensions ---------- */
+
+	private function bijak_dimension_fields(): array
+	{
+		return [
+			'length' => [
+				'label' => __('Length', 'bijak'),
+				'meta'  => Config::BIJAK_LENGTH_META,
+				'unit'  => get_option('woocommerce_dimension_unit', 'cm'),
+			],
+			'width' => [
+				'label' => __('Width', 'bijak'),
+				'meta'  => Config::BIJAK_WIDTH_META,
+				'unit'  => get_option('woocommerce_dimension_unit', 'cm'),
+			],
+			'height' => [
+				'label' => __('Height', 'bijak'),
+				'meta'  => Config::BIJAK_HEIGHT_META,
+				'unit'  => get_option('woocommerce_dimension_unit', 'cm'),
+			],
+			'weight' => [
+				'label' => __('Weight', 'bijak'),
+				'meta'  => Config::BIJAK_WEIGHT_META,
+				'unit'  => get_option('woocommerce_weight_unit', 'kg'),
+			],
+		];
+	}
+
+	private function product_dimension_value(\WC_Product $product, string $meta_key): string
+	{
+		$value = $product->get_meta($meta_key, true);
+		return is_scalar($value) ? (string) $value : '';
+	}
+
+	public function render_product_bijak_dimensions(): void
+	{
+		global $post;
+		if (! function_exists('woocommerce_wp_text_input') && defined('WC_ABSPATH')) {
+			require_once WC_ABSPATH . 'includes/admin/wc-meta-box-functions.php';
+		}
+		$product = ($post && ! empty($post->ID)) ? wc_get_product($post->ID) : new \WC_Product_Simple();
+		if (! $product instanceof \WC_Product) {
+			return;
+		}
+
+		echo '<div class="options_group bijak-product-dimensions">';
+		echo '<h4>' . esc_html__('Bijak Shipping Dimensions', 'bijak') . '</h4>';
+		echo '<p class="form-field bijak-dimensions-description"><span class="description">';
+		echo esc_html__('Optional overrides for Bijak shipping. Empty fields use the standard WooCommerce product values.', 'bijak');
+		echo '</span></p>';
+
+		foreach ($this->bijak_dimension_fields() as $key => $field) {
+			\woocommerce_wp_text_input([
+				'id'                => 'bijak_shipping_' . $key,
+				'label'             => $field['label'] . ' (' . $field['unit'] . ')',
+				'value'             => $this->product_dimension_value($product, $field['meta']),
+				'type'              => 'number',
+				'desc_tip'          => true,
+				'description'       => __('Used for Bijak when filled.', 'bijak'),
+				'custom_attributes' => [
+					'min'  => '0',
+					'step' => 'any',
+				],
+			]);
+		}
+		echo '</div>';
+	}
+
+	public function save_product_bijak_dimensions(\WC_Product $product): void
+	{
+		foreach ($this->bijak_dimension_fields() as $key => $field) {
+			if (! isset($_POST['bijak_shipping_' . $key])) {
+				continue;
+			}
+			$raw = isset($_POST['bijak_shipping_' . $key]) ? wp_unslash($_POST['bijak_shipping_' . $key]) : '';
+			$value = is_scalar($raw) ? wc_format_decimal($raw) : '';
+			if ($value !== '' && (float) $value > 0) {
+				$product->update_meta_data($field['meta'], $value);
+			} else {
+				$product->delete_meta_data($field['meta']);
+			}
+		}
+	}
+
+	public function render_variation_bijak_dimensions(int $loop, array $variation_data, $variation): void
+	{
+		if (! function_exists('woocommerce_wp_text_input') && defined('WC_ABSPATH')) {
+			require_once WC_ABSPATH . 'includes/admin/wc-meta-box-functions.php';
+		}
+		$variation_id = $variation instanceof \WP_Post ? $variation->ID : $variation;
+		$variation_product = wc_get_product($variation_id);
+		if (! $variation_product instanceof \WC_Product_Variation) {
+			return;
+		}
+		echo '<div class="bijak-variation-dimensions">';
+		echo '<p><strong>' . esc_html__('Bijak Shipping Dimensions', 'bijak') . '</strong></p>';
+		echo '<p class="form-row form-row-full"><span class="description">' . esc_html__('Optional overrides for Bijak shipping. Empty fields use the standard WooCommerce variation values.', 'bijak') . '</span></p>';
+
+		foreach ($this->bijak_dimension_fields() as $key => $field) {
+			\woocommerce_wp_text_input([
+				'id'                => 'bijak_shipping_' . $key . '_' . $loop,
+				'name'              => 'bijak_shipping_' . $key . '[' . $loop . ']',
+				'label'             => $field['label'] . ' (' . $field['unit'] . ')',
+				'value'             => $this->product_dimension_value($variation_product, $field['meta']),
+				'wrapper_class'     => 'form-row form-row-first',
+				'type'              => 'number',
+				'custom_attributes' => [
+					'min'  => '0',
+					'step' => 'any',
+				],
+			]);
+		}
+		echo '</div>';
+	}
+
+	public function save_variation_bijak_dimensions(int $variation_id, int $loop): void
+	{
+		$variation = wc_get_product($variation_id);
+		if (! $variation instanceof \WC_Product_Variation) {
+			return;
+		}
+
+		foreach ($this->bijak_dimension_fields() as $key => $field) {
+			if (! isset($_POST['bijak_shipping_' . $key]) || ! is_array($_POST['bijak_shipping_' . $key]) || ! array_key_exists($loop, $_POST['bijak_shipping_' . $key])) {
+				continue;
+			}
+			$raw = isset($_POST['bijak_shipping_' . $key][$loop]) ? wp_unslash($_POST['bijak_shipping_' . $key][$loop]) : '';
+			$value = is_scalar($raw) ? wc_format_decimal($raw) : '';
+			if ($value !== '' && (float) $value > 0) {
+				$variation->update_meta_data($field['meta'], $value);
+			} else {
+				$variation->delete_meta_data($field['meta']);
+			}
+		}
+		$variation->save();
 	}
 
 	/* ---------- Menu ---------- */
@@ -31,7 +176,7 @@ class Admin
 			__('Bijak (Shipping)', 'bijak'),
 			'manage_options',
 			'bijak-woo',
-			[$this, 'settings_page'],
+			[$this, 'dashboard_page'],
 			$icon_url,
 			25
 		);
@@ -39,9 +184,18 @@ class Admin
 		add_submenu_page(
 			'bijak-woo',
 			__('Bijak (Smart Freight)', 'bijak'),
-			__('Bijak (Smart Freight)', 'bijak'),
+			__('Dashboard', 'bijak'),
 			'manage_options',
 			'bijak-woo',
+			[$this, 'dashboard_page']
+		);
+
+		add_submenu_page(
+			'bijak-woo',
+			__('Bijak Setup & Settings', 'bijak'),
+			__('Setup & Settings', 'bijak'),
+			'manage_options',
+			'bijak-woo-settings',
 			[$this, 'settings_page']
 		);
 	}
@@ -190,7 +344,7 @@ class Admin
 		$authorization = (new Api())->request('/application/location-picker/authorize', 'POST', ['origin' => $parent_origin]);
 		if (is_wp_error($authorization) || empty($authorization['grant'])) wp_send_json_error(['message' => __('The Bijak API key is inactive or this domain is not authorized to use the location picker.', 'bijak')], 403);
 		try { $state = rtrim(strtr(base64_encode(random_bytes(Config::LOCATION_PICKER_STATE_BYTES)), '+/', '-_'), '='); } catch (\Throwable $e) { wp_send_json_error(['message' => __('Unable to create a secure picker session.', 'bijak')], 500); }
-		set_transient('bijak_origin_picker_' . get_current_user_id(), ['state' => $state, 'grant' => sanitize_text_field((string) $authorization['grant']), 'created_at' => time(), 'origin' => $parent_origin], Config::LOCATION_PICKER_STATE_TTL);
+		set_transient('bijak_origin_picker_' . get_current_user_id(), ['state' => $state, 'created_at' => time()], Config::LOCATION_PICKER_STATE_TTL);
 		$url = add_query_arg(['state' => $state, 'parent_origin' => $parent_origin, 'picker_grant' => (string) $authorization['grant']], $picker_url);
 		wp_send_json_success(['url' => esc_url_raw($url), 'state' => $state, 'origin' => Config::map_picker_origin()]);
 	}
@@ -204,8 +358,6 @@ class Admin
 		$lat = isset($_POST['lat']) && is_numeric($_POST['lat']) ? (float) wp_unslash($_POST['lat']) : null;
 		$lng = isset($_POST['lng']) && is_numeric($_POST['lng']) ? (float) wp_unslash($_POST['lng']) : null;
 		if (is_null($lat) || is_null($lng) || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) wp_send_json_error(['message' => __('The selected coordinates are invalid.', 'bijak')], 400);
-		$verify = (new Api())->request('/application/location-picker/verify', 'POST', ['grant' => (string) $pending['grant'], 'origin' => (string) $pending['origin']]);
-		if (is_wp_error($verify) || empty($verify['authorized'])) wp_send_json_error(['message' => __('The Bijak API key is inactive. Please try again.', 'bijak')], 403);
 		delete_transient('bijak_origin_picker_' . get_current_user_id());
 		wp_send_json_success(['coords' => $lat . ',' . $lng, 'lat' => $lat, 'lng' => $lng]);
 	}
@@ -429,90 +581,171 @@ class Admin
 
 	public function settings_page()
 	{
-		// Extra safety: ensure only admins can view this page directly.
-		if ( ! current_user_can('manage_options') ) {
+		if (! current_user_can('manage_options')) return;
+		$api_key = trim(Plugin::opt('api_key', ''));
+		$profile = ['ok' => false, 'msg' => ''];
+		if ($api_key !== '') $profile = $this->refresh_profile_options();
+
+		$logo = '<span class="bijak-brand-mark"><img src="' . esc_url(BIJAK_WOO_URL . 'assets/dashboard-logo.jpeg') . '" alt="' . esc_attr__('Bijak', 'bijak') . '" /></span>';
+		echo '<div class="wrap bijak-admin"><div class="bijak-page-header"><div><span class="bijak-eyebrow">BIJAK / CONFIGURATION</span><h1>' . esc_html__('Bijak Setup & Settings', 'bijak') . '</h1><p>' . esc_html__('Connect your store and manage shipping settings in one place.', 'bijak') . '</p></div>' . $logo . '</div>';
+		if ($profile['msg'] !== '') echo '<div class="notice ' . esc_attr($profile['ok'] ? 'notice-success' : 'notice-error') . ' is-dismissible"><p>' . esc_html($profile['msg']) . '</p></div>';
+		if (Plugin::opt('origin_location_needs_selection', 0)) echo '<div class="notice notice-warning"><p>' . esc_html__('The origin address changed. Select its point on the map and save the settings.', 'bijak') . '</p></div>';
+
+		echo '<section class="bijak-panel bijak-setup-connect"><div class="bijak-panel-heading"><div><span class="bijak-step">01</span><h2>' . esc_html__('Connect Your Bijak Account', 'bijak') . '</h2></div><span class="dashicons dashicons-admin-network"></span></div><p class="bijak-muted">' . esc_html__('Create an API key in the Bijak panel and enter it here.', 'bijak') . '</p><form method="post" action="options.php" class="bijak-inline-form">';
+		settings_fields(Plugin::OPT);
+		printf('<input type="password" autocomplete="off" class="regular-text bijak-api-input" name="%s[api_key]" value="%s" placeholder="API Key"/>', esc_attr(Plugin::OPT), esc_attr($api_key));
+		submit_button(esc_html__('Save & Sync', 'bijak'), 'primary', 'submit', false);
+		echo '<a class="button button-secondary" href="' . esc_url(Config::PANEL_API_KEYS_URL) . '" target="_blank" rel="noopener"><span class="dashicons dashicons-external"></span> ' . esc_html__('Create API Key', 'bijak') . '</a></form></section>';
+
+		echo '<section class="bijak-panel bijak-setup-origin"><div class="bijak-panel-heading"><div><span class="bijak-step">02</span><h2>' . esc_html__('Shipping Origin', 'bijak') . '</h2></div><span class="dashicons dashicons-location"></span></div><p class="bijak-muted">' . esc_html__('Set the pickup city, address, and exact map location used for Bijak shipments.', 'bijak') . '</p><form method="post" action="options.php" class="bijak-origin-form">';
+		settings_fields(Plugin::OPT);
+		do_settings_sections(Plugin::OPT);
+		echo '<div class="bijak-origin-form__footer">';
+		submit_button(esc_html__('Save Settings', 'bijak'), 'primary', 'submit', false);
+		echo '</div>';
+		echo '</form></section></div>';
+	}
+
+	public function dashboard_page()
+	{
+		if (! current_user_can('manage_options')) return;
+		$api_key = trim(Plugin::opt('api_key', ''));
+		$profile = $api_key !== '' ? $this->refresh_profile_options() : ['ok' => false, 'full_name' => '', 'phone' => '', 'wallet' => 0];
+		$orders = $this->fetch_orders();
+		$full = $profile['ok'] ? $profile['full_name'] : (string) Plugin::opt('supplier_full_name', '');
+		$phone = $profile['ok'] ? $profile['phone'] : (string) Plugin::opt('supplier_phone', '');
+		$wallet = $profile['ok'] ? (int) $profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
+
+		$logo = '<span class="bijak-brand-mark"><img src="' . esc_url(BIJAK_WOO_URL . 'assets/dashboard-logo.jpeg') . '" alt="' . esc_attr__('Bijak', 'bijak') . '" /></span>';
+		echo '<div class="wrap bijak-admin"><div class="bijak-page-header"><div><span class="bijak-eyebrow">BIJAK / CONTROL CENTER</span><h1>' . esc_html__('Bijak Dashboard', 'bijak') . '</h1><p>' . esc_html__('Review your account, wallet balance, and shipping orders at a glance.', 'bijak') . '</p></div>' . $logo . '</div>';
+		echo '<aside class="bijak-setup-reminder"><span class="dashicons dashicons-admin-settings"></span><p>' . esc_html__('Make sure your API key and shipping origin settings are correct.', 'bijak') . '</p><a class="button button-secondary" href="' . esc_url(admin_url('admin.php?page=bijak-woo-settings')) . '">' . esc_html__('Review Setup & Settings', 'bijak') . ' <span class="dashicons dashicons-arrow-left-alt2"></span></a></aside>';
+		if ($api_key === '') {
+			echo '<div class="bijak-empty-state"><span class="dashicons dashicons-admin-network"></span><h2>' . esc_html__('Your Bijak account is not connected yet', 'bijak') . '</h2><p>' . esc_html__('Save an API key first to view your wallet balance and orders.', 'bijak') . '</p><a class="button button-primary" href="' . esc_url(admin_url('admin.php?page=bijak-woo-settings')) . '">' . esc_html__('Start Setup', 'bijak') . '</a></div></div>';
 			return;
 		}
 
-		$api_key = trim(Plugin::opt('api_key', ''));
-		$profile = ['ok' => false, 'msg' => '', 'full_name' => '', 'phone' => '', 'wallet' => 0];
-
-		if ( $api_key !== '' ) {
-			$profile = $this->refresh_profile_options();
-		}
-
-		echo '<div class="wrap"><h1>' . esc_html__('Bijak (Smart Freight)', 'bijak') . '</h1>';
-		if (Plugin::opt('origin_location_needs_selection', 0)) {
-			echo '<div class="notice notice-warning"><p>' . esc_html__('The origin address changed, so its coordinates were cleared. Choose the origin on the map and save the settings.', 'bijak') . '</p></div>';
-		}
-
-		if ( $profile['msg'] !== '' ) {
-			$cls = $profile['ok'] ? 'notice-info' : 'notice-error';
-			echo '<div class="notice ' . esc_attr($cls) . ' is-dismissible"><p>' . esc_html($profile['msg']) . '</p></div>';
-		}
-
-		echo '<div class="bijak-card">';
-		echo '<h2 class="bijak-heading">' . esc_html__('Connect to Bijak (API Key)', 'bijak') . '</h2>';
-		echo '<form method="post" action="options.php">';
-		settings_fields(Plugin::OPT);
-
-		printf(
-			'<input type="text" class="regular-text" style="width:360px;direction:ltr" name="%s[api_key]" value="%s" placeholder="API Key"/>',
-			esc_attr(Plugin::OPT),
-			esc_attr($api_key)
-		);
-
-		submit_button(esc_html__('Save API Key', 'bijak'), 'primary', 'submit', false);
-		$api_url = Config::PANEL_API_KEYS_URL;
-		echo '<span>&nbsp;&nbsp;</span>';
-		echo '<a class="button button-secondary" href="' . esc_url($api_url) . '" target="_blank" rel="noopener">' . esc_html__('Create API key', 'bijak') . '</a>';
-		echo '</form>';
-		echo '<p class="bijak-muted">' . esc_html__('Name, phone and wallet are synced from Bijak. Use the profile button or map to set the origin address and location.', 'bijak') . '</p>';
+		echo '<div class="bijak-summary-grid"><div class="bijak-summary-card bijak-summary-wallet"><span class="dashicons dashicons-money-alt"></span><div><span class="bijak-summary-label">' . esc_html__('Wallet Balance', 'bijak') . '</span><strong>' . esc_html(number_format_i18n($wallet)) . ' <small>' . esc_html__('Toman', 'bijak') . '</small></strong><a href="' . esc_url(Config::PANEL_WALLET_URL) . '" target="_blank" rel="noopener">' . esc_html__('Manage Wallet', 'bijak') . ' <span class="dashicons dashicons-arrow-left-alt2"></span></a></div></div><div class="bijak-summary-card"><span class="dashicons dashicons-admin-users"></span><div><span class="bijak-summary-label">' . esc_html__('Connected Account', 'bijak') . '</span><strong>' . esc_html($full ?: '-') . '</strong><small dir="ltr">' . esc_html($phone ?: '-') . '</small></div></div><div class="bijak-summary-card"><span class="dashicons dashicons-list-view"></span><div><span class="bijak-summary-label">' . esc_html__('Total Orders', 'bijak') . '</span><strong>' . esc_html($orders['total_orders'] === null ? '-' : number_format_i18n($orders['total_orders'])) . '</strong><small>' . esc_html__('Based on the active filters', 'bijak') . '</small></div></div></div>';
+		echo '<aside class="bijak-web-app-callout"><span class="dashicons dashicons-external"></span><p>' . esc_html__('For viewing, payments, and other activities, use the Bijak web app.', 'bijak') . '</p><a class="button button-secondary" href="' . esc_url(Config::WEB_APP_URL) . '" target="_blank" rel="noopener">' . esc_html__('Open Bijak Web App', 'bijak') . ' <span class="dashicons dashicons-external"></span></a></aside>';
+		$this->render_orders($orders);
 		echo '</div>';
+	}
 
-		if ( $api_key === '' ) {
-			$full_name = '';
-			$phone     = '';
-			$wallet    = 0;
-		} else {
-			$full_name = $profile['ok'] ? $profile['full_name'] : sanitize_text_field(Plugin::opt('supplier_full_name', ''));
-			$phone     = $profile['ok'] ? $profile['phone']     : sanitize_text_field(Plugin::opt('supplier_phone', ''));
-			$wallet    = $profile['ok'] ? (int) $profile['wallet'] : (int) Plugin::opt('wallet_inventory', 0);
+	private function order_shipping_filter_value(): string
+	{
+		$value = isset($_GET['bijak_shipping']) && is_scalar($_GET['bijak_shipping']) ? sanitize_key(wp_unslash($_GET['bijak_shipping'])) : '';
+		return $value === 'bijak' ? $value : '';
+	}
+
+	private function bijak_order_ids(): array
+	{
+		global $wpdb;
+		$items_table = $wpdb->prefix . 'woocommerce_order_items';
+		$meta_table  = $wpdb->prefix . 'woocommerce_order_itemmeta';
+		$ids = $wpdb->get_col($wpdb->prepare(
+			"SELECT DISTINCT items.order_id FROM {$items_table} AS items INNER JOIN {$meta_table} AS itemmeta ON itemmeta.order_item_id = items.order_item_id WHERE items.order_item_type = %s AND itemmeta.meta_key = %s AND itemmeta.meta_value = %s",
+			'shipping',
+			'method_id',
+			Config::SHIPPING_METHOD_ID
+		));
+		return array_values(array_filter(array_map('absint', is_array($ids) ? $ids : [])));
+	}
+
+	public function render_order_shipping_filter($order_type = '', $which = 'top'): void
+	{
+		if ($which !== 'top' || $order_type !== 'shop_order') return;
+		echo '<select name="bijak_shipping" class="bijak-order-method-filter"><option value="">' . esc_html__('All shipping methods', 'bijak') . '</option><option value="bijak" ' . selected($this->order_shipping_filter_value(), 'bijak', false) . '>' . esc_html__('Shipping with Bijak', 'bijak') . '</option></select>';
+	}
+
+	public function render_legacy_order_shipping_filter(): void
+	{
+		global $typenow;
+		if ($typenow !== 'shop_order') return;
+		$this->render_order_shipping_filter('shop_order', 'top');
+	}
+
+	public function filter_hpos_orders(array $args): array
+	{
+		if ($this->order_shipping_filter_value() === '' || ! isset($_GET['page']) || sanitize_key(wp_unslash($_GET['page'])) !== 'wc-orders') return $args;
+		$ids = $this->bijak_order_ids();
+		$args['post__in'] = isset($args['post__in']) && is_array($args['post__in']) ? array_values(array_intersect(array_map('absint', $args['post__in']), $ids)) : $ids;
+		return $args;
+	}
+
+	public function filter_legacy_orders(\WP_Query $query): void
+	{
+		global $pagenow;
+		if ($this->order_shipping_filter_value() === '' || ! is_admin() || ! $query->is_main_query() || $pagenow !== 'edit.php' || $query->get('post_type') !== 'shop_order') return;
+		$ids = $this->bijak_order_ids();
+		$existing = $query->get('post__in');
+		$query->set('post__in', is_array($existing) && $existing ? array_values(array_intersect(array_map('absint', $existing), $ids)) : $ids);
+	}
+
+	private function order_filters(): array
+	{
+		$allowed = ['state' => ['all', 'active', 'previous']];
+		$out = [];
+		foreach ($allowed as $key => $values) { $value = isset($_GET[$key]) && is_scalar($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : ''; $out[$key] = in_array($value, $values, true) ? $value : 'all'; }
+		foreach (['tracking_number', 'phone_number', 'search'] as $key) $out[$key] = isset($_GET[$key]) && is_scalar($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';
+		foreach (['start_date', 'end_date'] as $key) $out[$key] = isset($_GET[$key]) && is_scalar($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';
+		$paged = isset($_GET['paged']) && is_scalar($_GET['paged']) ? absint($_GET['paged']) : 0;
+		$page_num = isset($_GET['page_num']) && is_scalar($_GET['page_num']) ? absint($_GET['page_num']) : 0;
+		$out['page'] = max(1, $paged ?: $page_num);
+		return $out;
+	}
+
+	private function fetch_orders(): array
+	{
+		$filters = $this->order_filters();
+		if (trim(Plugin::opt('api_key', '')) === '') return ['orders' => [], 'total' => 0, 'total_orders' => 0, 'pages' => 0, 'page' => 1, 'error' => ''];
+		$query = $filters; $query['page'] = $filters['page']; $api = new Api();
+		$response = $api->get('/application/orders', $query);
+		if (is_wp_error($response)) return ['orders' => [], 'total' => 0, 'total_orders' => null, 'pages' => 0, 'page' => $filters['page'], 'error' => $response->get_error_message()];
+		$orders = isset($response['orders']) && is_array($response['orders']) ? $response['orders'] : (isset($response['data']['orders']) && is_array($response['data']['orders']) ? $response['data']['orders'] : []);
+		$pages = max(1, absint($response['total_pages'] ?? $response['data']['total_pages'] ?? 1));
+		$page = max(1, absint($response['current_page'] ?? $response['data']['current_page'] ?? $filters['page']));
+		$total_orders = $pages === 1 ? count($orders) : null;
+		if ($pages > 1) {
+			$last_orders = $page === $pages ? $orders : null;
+			if ($last_orders === null) {
+				$last_query = $query; $last_query['page'] = $pages; $last_response = $api->get('/application/orders', $last_query);
+				if (! is_wp_error($last_response)) $last_orders = isset($last_response['orders']) && is_array($last_response['orders']) ? $last_response['orders'] : (isset($last_response['data']['orders']) && is_array($last_response['data']['orders']) ? $last_response['data']['orders'] : null);
+			}
+			if (is_array($last_orders)) $total_orders = (($pages - 1) * Config::ORDERS_PER_PAGE) + count($last_orders);
 		}
+		return ['orders' => $orders, 'total' => count($orders), 'total_orders' => $total_orders, 'pages' => $pages, 'page' => $page, 'error' => ''];
+	}
 
-		echo '<div class="bijak-card">';
-		echo '<h2 class="bijak-heading">' . esc_html__('Bijak account info', 'bijak') . '</h2>';
-		echo '<div class="bijak-row">';
-		echo '<div class="bijak-col"><label>' . esc_html__('Account holder name', 'bijak') . '</label><br/>';
-		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($full_name ?: ''));
-		echo '<p class="bijak-muted">' . esc_html__('Name in your Bijak profile', 'bijak') . '</p></div>';
+	private function render_orders(array $result): void
+	{
+		$f = $this->order_filters();
+		echo '<section class="bijak-orders"><div class="bijak-orders-heading"><div><span class="bijak-eyebrow">ORDERS</span><h2>' . esc_html__('Bijak Orders', 'bijak') . '</h2></div><a class="button button-secondary" href="' . esc_url(add_query_arg(['page' => 'bijak-woo'], admin_url('admin.php'))) . '"><span class="dashicons dashicons-update"></span> ' . esc_html__('Refresh', 'bijak') . '</a></div>';
+		echo '<form method="get" class="bijak-order-filters"><input type="hidden" name="page" value="bijak-woo"/><input type="search" name="search" value="' . esc_attr($f['search']) . '" placeholder="' . esc_attr__('Search orders', 'bijak') . '"/><input type="text" name="tracking_number" value="' . esc_attr($f['tracking_number']) . '" placeholder="' . esc_attr__('Tracking number', 'bijak') . '"/><input type="text" name="phone_number" value="' . esc_attr($f['phone_number']) . '" placeholder="' . esc_attr__('Phone number', 'bijak') . '"/><select name="state"><option value="all" ' . selected($f['state'], 'all', false) . '>' . esc_html__('Shipping status', 'bijak') . '</option><option value="active" ' . selected($f['state'], 'active', false) . '>' . esc_html__('Active', 'bijak') . '</option><option value="previous" ' . selected($f['state'], 'previous', false) . '>' . esc_html__('Previous', 'bijak') . '</option></select><input type="text" class="bijak-jalali-date" data-jdp name="start_date" value="' . esc_attr($f['start_date']) . '" placeholder="' . esc_attr__('Start date', 'bijak') . '"/><input type="text" class="bijak-jalali-date" data-jdp name="end_date" value="' . esc_attr($f['end_date']) . '" placeholder="' . esc_attr__('End date', 'bijak') . '"/><button class="button button-primary bijak-filter-submit" type="submit"><span class="dashicons dashicons-search" aria-hidden="true"></span><span>' . esc_html__('Filter', 'bijak') . '</span></button><a class="button" href="' . esc_url(admin_url('admin.php?page=bijak-woo')) . '">' . esc_html__('Clear', 'bijak') . '</a></form>';
+		if ($result['error']) echo '<div class="notice notice-error inline"><p>' . esc_html($result['error']) . '</p></div>';
+		if (empty($result['orders'])) { echo '<div class="bijak-orders-empty"><span class="dashicons dashicons-clipboard"></span><p>' . esc_html__('No orders found for the selected filters.', 'bijak') . '</p></div></section>'; return; }
+		echo '<div class="bijak-table-wrap"><table class="widefat bijak-orders-table"><thead><tr><th>' . esc_html__('Order', 'bijak') . '</th><th>' . esc_html__('Counterparty', 'bijak') . '</th><th>' . esc_html__('Destination', 'bijak') . '</th><th>' . esc_html__('Status', 'bijak') . '</th><th>' . esc_html__('Tracking', 'bijak') . '</th><th>' . esc_html__('Created', 'bijak') . '</th><th>' . esc_html__('Updated', 'bijak') . '</th><th>' . esc_html__('Actions', 'bijak') . '</th></tr></thead><tbody>';
+		foreach ($result['orders'] as $order) { $title = sanitize_text_field($order['title'] ?? '-'); $status = sanitize_text_field($order['order_status_titles'] ?? $order['order_status'] ?? '-'); $tracking = sanitize_text_field($order['tracking_number'] ?? ''); $uuid = isset($order['uuid']) && is_scalar($order['uuid']) ? sanitize_text_field($order['uuid']) : ''; $details_url = $uuid ? esc_url(Config::PANEL_ORDER_DETAILS_URL . rawurlencode($uuid)) : ''; $tracking_html = $tracking ? '<button type="button" class="bijak-tracking-copy" data-tracking="' . esc_attr($tracking) . '" aria-label="' . esc_attr__('Copy tracking number', 'bijak') . '" title="' . esc_attr__('Copy tracking number', 'bijak') . '">' . esc_html($tracking) . '</button>' : '-'; echo '<tr><td><strong>' . esc_html($title) . '</strong><small dir="ltr">' . esc_html($uuid) . '</small></td><td>' . esc_html($order['counterparty_name'] ?? '-') . '</td><td>' . esc_html($order['destination_city'] ?? '-') . '</td><td><span class="bijak-status">' . esc_html($status) . '</span></td><td dir="ltr">' . $tracking_html . '</td><td dir="ltr">' . esc_html($order['created_at'] ?? '-') . '</td><td dir="ltr">' . esc_html($order['updated_at'] ?? '-') . '</td><td>' . ($details_url ? '<a class="button button-small bijak-order-action" href="' . $details_url . '" target="_blank" rel="noopener"><span class="dashicons dashicons-external"></span> ' . esc_html__('View in Bijak', 'bijak') . '</a>' : '-') . '</td></tr>'; }
+		echo '</tbody></table></div>';
+		if ($result['pages'] > 1) $this->render_orders_pagination($result, $f);
+		echo '</section>';
+	}
 
-		echo '<div class="bijak-col"><label>' . esc_html__('Phone number', 'bijak') . '</label><br/>';
-		printf('<input type="text" class="regular-text" value="%s" readonly>', esc_attr($phone ?: ''));
-		echo '<p class="bijak-muted">' . esc_html__('Phone in Bijak profile', 'bijak') . '</p></div>';
+	private function render_orders_pagination(array $result, array $filters): void
+	{
+		$current = (int) $result['page']; $total = (int) $result['pages'];
+		$pages = array_unique(array_filter([1, 2, $current - 1, $current, $current + 1, $total - 1, $total], static function ($page) use ($total) { return $page >= 1 && $page <= $total; }));
+		sort($pages, SORT_NUMERIC);
+		$url = static function (int $page) use ($filters): string { $args = ['page' => 'bijak-woo', 'paged' => $page]; foreach ($filters as $key => $value) if ($value !== '' && $key !== 'page') $args[$key] = $value; return esc_url(add_query_arg($args, admin_url('admin.php'))); };
 
-		echo '<div class="bijak-col"><label>' . esc_html__('Wallet balance', 'bijak') . '</label><br/>';
-		if ( $api_key === '' ) {
-			echo '<div class="bijak-badge bijak-inv">—</div>';
-		} else {
-			$wallet_url = Config::PANEL_WALLET_URL;
-			echo '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
-			echo '<div class="bijak-badge bijak-inv">' . esc_html(number_format_i18n($wallet) . ' ' . __('Toman', 'bijak')) . '</div>';
-			echo '<a class="button button-secondary" href="' . esc_url($wallet_url) . '" target="_blank" rel="noopener">' . esc_html__('Top up wallet', 'bijak') . '</a>';
-			echo '</div>';
-		}
-		echo '<p class="bijak-muted">' . esc_html__('Bijak wallet', 'bijak') . '</p></div>';
+		echo '<nav class="bijak-pagination" aria-label="' . esc_attr__('Orders pagination', 'bijak') . '">';
+		if ($current > 1) echo '<a class="bijak-pagination__nav" href="' . $url($current - 1) . '" aria-label="' . esc_attr__('Previous page', 'bijak') . '" title="' . esc_attr__('Previous page', 'bijak') . '"><span class="dashicons dashicons-arrow-right-alt2"></span></a>';
+		else echo '<span class="bijak-pagination__nav is-disabled" aria-hidden="true"><span class="dashicons dashicons-arrow-right-alt2"></span></span>';
 
-		echo '</div></div>';
+		$last = 0;
+		foreach ($pages as $page) { if ($last && $page > $last + 1) echo '<span class="bijak-pagination__ellipsis" aria-hidden="true">&hellip;</span>'; echo '<a class="' . ($page === $current ? 'is-current' : '') . '" href="' . $url($page) . '"' . ($page === $current ? ' aria-current="page"' : '') . '>' . esc_html($page) . '</a>'; $last = $page; }
 
-		echo '<div class="bijak-card">';
-		echo '<form method="post" action="options.php">';
-		settings_fields(Plugin::OPT);
-		do_settings_sections(Plugin::OPT);
-		submit_button();
-		echo '</form></div>';
-
-		echo '</div>';
+		if ($current < $total) echo '<a class="bijak-pagination__nav" href="' . $url($current + 1) . '" aria-label="' . esc_attr__('Next page', 'bijak') . '" title="' . esc_attr__('Next page', 'bijak') . '"><span class="dashicons dashicons-arrow-left-alt2"></span></a>';
+		else echo '<span class="bijak-pagination__nav is-disabled" aria-hidden="true"><span class="dashicons dashicons-arrow-left-alt2"></span></span>';
+		echo '</nav>';
 	}
 
 	/* ---------- Admin notice ---------- */
@@ -526,7 +759,7 @@ class Admin
 		if ( $key !== '' ) {
 			return;
 		}
-		$url = admin_url('admin.php?page=bijak-woo');
+		$url = admin_url('admin.php?page=bijak-woo-settings');
 		echo '<div class="notice notice-warning is-dismissible">';
 		echo '<p><strong>' . esc_html__('Bijak:', 'bijak') . '</strong> ';
 		echo wp_kses_post(sprintf(
